@@ -30,3 +30,6 @@ drizzle/
 
 # Local Netlify folder
 .netlify
+
+# Netlify functions build output (generated during deploy)
+netlify/functions-built/

@@ -30,6 +30,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!isLoading) {
+      const splash = document.getElementById("splash");
+      if (splash) {
+        splash.style.opacity = "0";
+        setTimeout(() => splash.remove(), 400);
+      }
+    }
+  }, [isLoading]);
+
+  useEffect(() => {
     // Try to restore session
     const token = getAuthToken();
     if (token) {

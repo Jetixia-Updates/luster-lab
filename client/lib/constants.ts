@@ -2,13 +2,17 @@
  * Application constants - Labels, mappings, and configuration
  */
 
-import type { CaseStatus, CaseWorkType, UserRole } from "@shared/api";
+import type {
+  CaseStatus, CaseWorkType, UserRole,
+  RemovableProstheticType, OrthoRemovableType, RemovableFinalStatus,
+} from "@shared/api";
 
 export const STATUS_LABELS: Record<CaseStatus, { en: string; ar: string; color: string }> = {
   reception: { en: "Reception", ar: "الاستقبال", color: "bg-blue-100 text-blue-800" },
   cad_design: { en: "CAD Design", ar: "التصميم", color: "bg-purple-100 text-purple-800" },
   cam_milling: { en: "CAM/Milling", ar: "التفريز", color: "bg-orange-100 text-orange-800" },
   finishing: { en: "Finishing", ar: "التشطيب والتلوين", color: "bg-yellow-100 text-yellow-800" },
+  removable: { en: "Removable Prosthetics", ar: "التركيبات المتحركة", color: "bg-teal-100 text-teal-800" },
   quality_control: { en: "Quality Control", ar: "مراقبة الجودة", color: "bg-cyan-100 text-cyan-800" },
   accounting: { en: "Accounting", ar: "الحسابات", color: "bg-green-100 text-green-800" },
   ready_for_delivery: { en: "Ready for Delivery", ar: "جاهز للتسليم", color: "bg-emerald-100 text-emerald-800" },
@@ -55,6 +59,39 @@ export const SHADE_COLORS = [
 ];
 
 export const WORKFLOW_ORDER: CaseStatus[] = [
-  "reception", "cad_design", "cam_milling", "finishing",
+  "reception", "cad_design", "cam_milling", "finishing", "removable",
   "quality_control", "accounting", "ready_for_delivery", "delivered",
 ];
+
+/** أنواع التركيبات المتحركة */
+export const REMOVABLE_PROSTHETIC_LABELS: Record<RemovableProstheticType, { ar: string }> = {
+  denture_soft: { ar: "طقم سوفت" },
+  denture_hard: { ar: "طقم هارد" },
+  denture_repair: { ar: "تصليح طقم" },
+  add_teeth: { ar: "إضافة أسنان" },
+  soft_relining: { ar: "تبطين طقم ببطانه سوفت" },
+  base_change: { ar: "تغيير قاعدة" },
+  temp_acrylic_crown: { ar: "طربوش مؤقت اكريل" },
+  other: { ar: "أخرى" },
+};
+
+/** أنواع التقويم مع التركيبات المتحركة */
+export const ORTHO_REMOVABLE_LABELS: Record<OrthoRemovableType, { ar: string }> = {
+  twin_block: { ar: "توين بلوك" },
+  expansion_appliance: { ar: "جهاز توسيع" },
+  hawley_retainer: { ar: "هاولي ريتينر" },
+  space_maintainer: { ar: "حافظ مسافة" },
+};
+
+/** مراحل قسم التركيبات المتحركة */
+export const REMOVABLE_STAGES = [
+  { id: "arrange", name: "Tooth Arrangement", nameAr: "رص الأسنان" },
+  { id: "cook", name: "Acrylic/Flex Cooking", nameAr: "طبخ الأكريل / الفليكس" },
+  { id: "ready", name: "Ready", nameAr: "جاهز" },
+];
+
+/** الحالة النهائية للتركيبات المتحركة */
+export const REMOVABLE_FINAL_LABELS: Record<RemovableFinalStatus, { ar: string }> = {
+  try_in: { ar: "Try-In" },
+  delivery: { ar: "Delivery" },
+};

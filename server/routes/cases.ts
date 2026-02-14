@@ -22,11 +22,12 @@ import type {
 
 // Status flow validation
 const VALID_TRANSITIONS: Record<CaseStatus, CaseStatus[]> = {
-  reception: ["cad_design", "cancelled"],
+  reception: ["cad_design", "removable", "cancelled"],
   cad_design: ["cam_milling", "reception", "cancelled"],
   cam_milling: ["finishing", "cad_design", "cancelled"],
   finishing: ["quality_control", "cam_milling", "cancelled"],
-  quality_control: ["accounting", "finishing", "cam_milling", "cad_design", "cancelled"],
+  removable: ["quality_control", "reception", "cancelled"],
+  quality_control: ["accounting", "finishing", "cam_milling", "cad_design", "removable", "cancelled"],
   accounting: ["ready_for_delivery"],
   ready_for_delivery: ["delivered"],
   delivered: ["returned"],
@@ -39,6 +40,7 @@ const STATUS_DEPARTMENT_MAP: Record<CaseStatus, string> = {
   cad_design: "cad",
   cam_milling: "cam",
   finishing: "finishing",
+  removable: "removable",
   quality_control: "quality_control",
   accounting: "accounting",
   ready_for_delivery: "delivery",
@@ -230,6 +232,17 @@ export const updateCAMData: RequestHandler = (req, res) => {
   if (!c) return res.status(404).json({ success: false, error: "Case not found" });
 
   c.camData = { ...c.camData, ...req.body };
+  c.updatedAt = new Date().toISOString();
+  persistCase(c);
+  res.json({ success: true, data: c });
+};
+
+// PUT /api/cases/:id/removable
+export const updateRemovableData: RequestHandler = (req, res) => {
+  const c = cases.find((c) => c.id === req.params.id);
+  if (!c) return res.status(404).json({ success: false, error: "Case not found" });
+
+  c.removableData = { ...c.removableData, ...req.body };
   c.updatedAt = new Date().toISOString();
   persistCase(c);
   res.json({ success: true, data: c });

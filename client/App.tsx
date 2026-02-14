@@ -9,6 +9,7 @@ import CaseDetail from "@/pages/CaseDetail";
 import CADDepartment from "@/pages/CADDepartment";
 import CAMDepartment from "@/pages/CAMDepartment";
 import Finishing from "@/pages/Finishing";
+import RemovableDepartment from "@/pages/RemovableDepartment";
 import QualityControl from "@/pages/QualityControl";
 import Inventory from "@/pages/Inventory";
 import Accounting from "@/pages/Accounting";
@@ -31,10 +32,26 @@ function ProtectedRoutes() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background" dir="rtl">
-        <div className="text-center">
-          <img src="/logo1.png" alt="لاستر" className="inline-block w-16 h-16 object-contain mb-4 animate-pulse" />
-          <p className="text-muted-foreground">جاري التحميل...</p>
+      <div
+        className="min-h-screen min-h-dvh flex flex-col items-center justify-center bg-gradient-to-br from-blue-600 via-blue-700 to-teal-600"
+        dir="rtl"
+      >
+        <div className="flex flex-col items-center animate-in fade-in duration-500">
+          <div className="rounded-2xl bg-white/10 backdrop-blur-sm p-6 shadow-2xl mb-6">
+            <img
+              src="/logo1.png"
+              alt="لاستر"
+              className="w-28 h-28 sm:w-36 sm:h-36 object-contain drop-shadow-xl"
+            />
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">معمل لاستر لطب الأسنان</h1>
+          <p className="text-blue-100/90 text-sm sm:text-base mb-6">Luster Dental Lab</p>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-white/80 animate-bounce [animation-delay:-0.3s]" />
+            <div className="w-2 h-2 rounded-full bg-white/80 animate-bounce [animation-delay:-0.15s]" />
+            <div className="w-2 h-2 rounded-full bg-white/80 animate-bounce" />
+          </div>
+          <p className="text-blue-200/70 text-xs mt-4">جاري التحميل...</p>
         </div>
       </div>
     );
@@ -54,6 +71,7 @@ function ProtectedRoutes() {
         <Route path="/cad" element={<CADDepartment />} />
         <Route path="/cam" element={<CAMDepartment />} />
         <Route path="/finishing" element={<Finishing />} />
+        <Route path="/removable" element={<RemovableDepartment />} />
         <Route path="/qc" element={<QualityControl />} />
         <Route path="/inventory" element={<Inventory />} />
         <Route path="/accounting" element={<Accounting />} />

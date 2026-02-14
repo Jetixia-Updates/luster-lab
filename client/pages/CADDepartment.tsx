@@ -96,21 +96,6 @@ const VIEW_PRESETS = [
   { id: "iso", label: "45°", pos: [3.5, 3.5, 3.5], target: [0, 0, 0] },
 ];
 
-const DESIGN_STAGES_TEMPLATE: Omit<CADDesignStage, "id" | "status">[] = [
-  { name: "Scan Import", nameAr: "استيراد المسح الضوئي" },
-  { name: "Die Trimming", nameAr: "تقليم الداي" },
-  { name: "Margin Detection", nameAr: "تحديد خط الحافة" },
-  { name: "Insert Direction", nameAr: "اتجاه الإدخال" },
-  { name: "Wax-up / Design", nameAr: "التصميم / الواكس أب" },
-  { name: "Anatomy Adjustment", nameAr: "ضبط التشريح" },
-  { name: "Contact Points", nameAr: "نقاط التماس" },
-  { name: "Occlusion Check", nameAr: "فحص الإطباق" },
-  { name: "Connector Design", nameAr: "تصميم الموصلات" },
-  { name: "Thickness Check", nameAr: "فحص السمك" },
-  { name: "Final Review", nameAr: "المراجعة النهائية" },
-  { name: "Export STL", nameAr: "تصدير STL" },
-];
-
 const INSERT_DIRECTIONS = [
   { id: "occlusal", nameAr: "إطباقي (من الأعلى)" },
   { id: "buccal", nameAr: "خدي" },
@@ -488,252 +473,6 @@ function ViewerScene({
   );
 }
 
-// ── Stage Action Panel - تعليمات وإجراءات كل مرحلة ────────
-function StageActionPanel({
-  stageIndex,
-  stageNameAr,
-  designFiles,
-  annotations,
-  marginType,
-  connectorSize,
-  wallThickness,
-  insertDirection,
-  setInsertDirection,
-  occlusionType,
-  setOcclusionType,
-  dieTrimHeight,
-  setDieTrimHeight,
-  onAddMarginAnnotation,
-  onAddContactAnnotation,
-  onAddThicknessAnnotation,
-  onExportSTL,
-  onCompleteStage,
-  canComplete,
-  onRejectStage,
-}: {
-  stageIndex: number;
-  stageNameAr: string;
-  designFiles: { fileName: string }[];
-  annotations: CADAnnotation[];
-  marginType: string;
-  connectorSize: number;
-  wallThickness: number;
-  insertDirection: string;
-  setInsertDirection: (v: string) => void;
-  occlusionType: string;
-  setOcclusionType: (v: string) => void;
-  dieTrimHeight: number;
-  setDieTrimHeight: (v: number) => void;
-  onAddMarginAnnotation: () => void;
-  onAddContactAnnotation: () => void;
-  onAddThicknessAnnotation: () => void;
-  onExportSTL: () => void;
-  onCompleteStage: () => void;
-  canComplete: boolean;
-  onRejectStage: () => void;
-}) {
-  const marginCount = annotations.filter((a) => a.type === "margin_line").length;
-  const contactCount = annotations.filter((a) => a.type === "contact_point").length;
-  const thicknessCount = annotations.filter((a) => a.type === "thickness").length;
-
-  const stagePanels: Record<number, React.ReactNode> = {
-    0: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">ارفع ملفات المسح الضوئي STL/PLY/OBJ</p>
-        {designFiles.length > 0 ? (
-          <div className="text-[10px] text-green-600 flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3" /> تم رفع {designFiles.length} ملف
-          </div>
-        ) : (
-          <p className="text-[10px] text-amber-600">يُفضّل رفع ملف واحد على الأقل للمتابعة</p>
-        )}
-      </div>
-    ),
-    1: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">حدد ارتفاع تقليم الداي (mm)</p>
-        <Input
-          type="number"
-          value={dieTrimHeight}
-          onChange={(e) => setDieTrimHeight(+e.target.value)}
-          min={0.5}
-          max={3}
-          step={0.1}
-          className="h-7 text-xs"
-        />
-        <p className="text-[10px] text-muted-foreground">القيمة الافتراضية 1.0mm</p>
-      </div>
-    ),
-    2: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">أضف علامات خط الحافة على النموذج</p>
-        <Button size="sm" variant="outline" className="w-full h-7 text-xs gap-1" onClick={onAddMarginAnnotation}>
-          <Circle className="w-3 h-3" /> إضافة خط حافة
-        </Button>
-        {marginCount > 0 && (
-          <p className="text-[10px] text-green-600">{marginCount} علامة حافة</p>
-        )}
-      </div>
-    ),
-    3: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">اختر اتجاه الإدخال</p>
-        <Select value={insertDirection} onValueChange={setInsertDirection}>
-          <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {INSERT_DIRECTIONS.map((d) => (
-              <SelectItem key={d.id} value={d.id}>{d.nameAr}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    ),
-    4: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">مرحلة التصميم الرئيسية - استخدم الأدوات للنموذج</p>
-        <p className="text-[10px] text-muted-foreground">القياس، الحافة، التماس، السمك</p>
-      </div>
-    ),
-    5: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">ضبط التشريح والتضاريس</p>
-        <p className="text-[10px] text-muted-foreground">راجع الشكل النهائي في النموذج</p>
-      </div>
-    ),
-    6: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">حدد نقاط التماس مع الأسنان المجاورة</p>
-        <Button size="sm" variant="outline" className="w-full h-7 text-xs gap-1" onClick={onAddContactAnnotation}>
-          <Target className="w-3 h-3" /> إضافة نقطة تماس
-        </Button>
-        {contactCount > 0 && (
-          <p className="text-[10px] text-green-600">{contactCount} نقطة تماس</p>
-        )}
-      </div>
-    ),
-    7: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">اختر نوع الإطباق</p>
-        <Select value={occlusionType} onValueChange={setOcclusionType}>
-          <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {OCCLUSION_TYPES.map((o) => (
-              <SelectItem key={o.id} value={o.id}>{o.nameAr}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    ),
-    8: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">حجم الموصل الحالي: {connectorSize} mm²</p>
-        <p className="text-[10px] text-muted-foreground">يُفضّل ≥7 للخلفي، ≥9 للأمامي</p>
-      </div>
-    ),
-    9: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">أضف قياسات السمك</p>
-        <Button size="sm" variant="outline" className="w-full h-7 text-xs gap-1" onClick={onAddThicknessAnnotation}>
-          <Square className="w-3 h-3" /> إضافة قياس سمك
-        </Button>
-        {thicknessCount > 0 && (
-          <p className="text-[10px] text-green-600">{thicknessCount} قياس</p>
-        )}
-        <p className="text-[10px] text-muted-foreground">الحد الأدنى: {wallThickness}mm</p>
-      </div>
-    ),
-    10: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">المراجعة النهائية</p>
-        <div className="text-[10px] space-y-0.5">
-          <p>الحافة: {marginType} ✓</p>
-          <p>السمك: {wallThickness}mm ✓</p>
-          <p>الموصل: {connectorSize}mm² ✓</p>
-        </div>
-      </div>
-    ),
-    11: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">صدّر الملفات لبرنامج التصميم أو CAM</p>
-        <Button size="sm" className="w-full h-7 text-xs gap-1 bg-green-600" onClick={onExportSTL}>
-          <FileDown className="w-3 h-3" /> تصدير STL
-        </Button>
-      </div>
-    ),
-  };
-
-  const content = stagePanels[stageIndex];
-
-  return (
-    <div className="bg-white/95 backdrop-blur rounded-lg p-3 shadow-lg max-w-[240px] border">
-      <p className="text-[10px] text-gray-500 mb-1">المرحلة {stageIndex + 1}/12</p>
-      <p className="text-sm font-bold text-blue-700 mb-2">{stageNameAr}</p>
-      {content}
-      <div className="flex gap-1 mt-3">
-        <Button size="sm" className="flex-1 h-7 text-xs gap-0.5" onClick={onCompleteStage} disabled={!canComplete}>
-          <CheckCircle className="w-3 h-3" /> إتمام
-        </Button>
-        <Button size="sm" variant="outline" className="flex-1 h-7 text-xs text-red-600 border-red-300" onClick={onRejectStage}>
-          <XCircle className="w-3 h-3" /> رفض
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-// ── Design Stage Pipeline Component ────────
-function StagePipeline({ stages, currentStage, onStageClick, onStageComplete }: {
-  stages: CADDesignStage[];
-  currentStage: string;
-  onStageClick: (stageId: string) => void;
-  onStageComplete: (stageId: string) => void;
-}) {
-  return (
-    <div className="flex gap-1 overflow-x-auto pb-2">
-      {stages.map((stage, idx) => {
-        const isActive = stage.id === currentStage;
-        const isCompleted = stage.status === "completed";
-        const isRejected = stage.status === "rejected";
-        const isPending = stage.status === "pending";
-        const isInProgress = stage.status === "in_progress";
-
-        return (
-          <div key={stage.id} className="flex items-center">
-            <button
-              onClick={() => onStageClick(stage.id)}
-              className={`flex flex-col items-center px-2 py-1.5 rounded-lg text-[10px] min-w-[70px] transition-all border ${
-                isActive ? "bg-blue-100 border-blue-400 shadow-md scale-105" :
-                isCompleted ? "bg-green-50 border-green-300" :
-                isRejected ? "bg-red-50 border-red-300" :
-                isInProgress ? "bg-amber-50 border-amber-300" :
-                "bg-gray-50 border-gray-200 hover:bg-gray-100"
-              }`}
-            >
-              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-bold mb-0.5 ${
-                isCompleted ? "bg-green-500" :
-                isRejected ? "bg-red-500" :
-                isInProgress ? "bg-amber-500" :
-                isActive ? "bg-blue-500" : "bg-gray-300"
-              }`}>
-                {isCompleted ? "✓" : isRejected ? "✗" : idx + 1}
-              </div>
-              <span className={`text-center leading-tight ${isActive ? "font-bold text-blue-700" : ""}`}>
-                {stage.nameAr}
-              </span>
-              {isInProgress && (
-                <span className="text-[8px] text-amber-600 mt-0.5">جارٍ...</span>
-              )}
-            </button>
-            {idx < stages.length - 1 && (
-              <ChevronRight className={`w-3 h-3 mx-0.5 flex-shrink-0 ${isCompleted ? "text-green-400" : "text-gray-300"}`} />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 // ── Main Component ─────────────────────────
 export default function CADDepartment() {
   const { user } = useAuth();
@@ -746,8 +485,6 @@ export default function CADDepartment() {
   // Workspace state
   const [activeTool, setActiveTool] = useState<string>("select");
   const [annotations, setAnnotations] = useState<CADAnnotation[]>([]);
-  const [designStages, setDesignStages] = useState<CADDesignStage[]>([]);
-  const [currentStageId, setCurrentStageId] = useState("");
   const [versions, setVersions] = useState<CADDesignVersion[]>([]);
   const [showParamsPanel, setShowParamsPanel] = useState(true);
   const [viewPreset, setViewPreset] = useState("iso");
@@ -798,21 +535,6 @@ export default function CADDepartment() {
     setSelectedCase(c);
     setViewMode("workspace");
 
-    // Initialize design stages
-    const existingStages = c.cadData?.designStages || [];
-    if (existingStages.length === 0) {
-      const newStages: CADDesignStage[] = DESIGN_STAGES_TEMPLATE.map((s, i) => ({
-        ...s,
-        id: `stage_${i}`,
-        status: i === 0 ? "in_progress" as const : "pending" as const,
-      }));
-      setDesignStages(newStages);
-      setCurrentStageId("stage_0");
-    } else {
-      setDesignStages(existingStages);
-      setCurrentStageId(c.cadData?.currentStage || existingStages[0]?.id || "");
-    }
-
     // Load existing data or apply work-type defaults (ISO/FDI specs)
     const params = WORK_TYPE_PARAMS[c.workType] || WORK_TYPE_PARAMS.other;
     setAnnotations(c.cadData?.annotations || []);
@@ -839,8 +561,8 @@ export default function CADDepartment() {
         status: "in_progress",
         software,
         notes: designNotes,
-        designStages,
-        currentStage: currentStageId,
+        designStages: [],
+        currentStage: "",
         annotations,
         versions,
         designFiles,
@@ -859,40 +581,6 @@ export default function CADDepartment() {
     } catch (err: any) {
       toast.error(err.message);
     }
-  };
-
-  const completeStage = (stageId: string) => {
-    setDesignStages(prev => {
-      const updated = prev.map((s, i, arr) => {
-        if (s.id === stageId) return { ...s, status: "completed" as const, endTime: new Date().toISOString() };
-        const prevIdx = arr.findIndex(x => x.id === stageId);
-        if (i === prevIdx + 1 && (s.status === "pending" || s.status === "rejected")) {
-          return { ...s, status: "in_progress" as const, startTime: new Date().toISOString() };
-        }
-        return s;
-      });
-      const nextIdx = updated.findIndex(s => s.status === "in_progress");
-      if (nextIdx >= 0) setCurrentStageId(updated[nextIdx].id);
-      return updated;
-    });
-    toast.success("تم إتمام المرحلة");
-  };
-
-  const rejectStage = (stageId: string) => {
-    setDesignStages(prev => {
-      const idx = prev.findIndex(s => s.id === stageId);
-      const updated = prev.map((s) => {
-        if (s.id === stageId) return { ...s, status: "rejected" as const };
-        return s;
-      });
-      // Activate previous stage
-      if (idx > 0) {
-        updated[idx - 1] = { ...updated[idx - 1], status: "in_progress" as const, startTime: new Date().toISOString() };
-        setCurrentStageId(updated[idx - 1].id);
-      }
-      return updated;
-    });
-    toast.warning("تم رفض المرحلة - العودة للمرحلة السابقة");
   };
 
   const handleModelClick = (point: { x: number; y: number; z: number }) => {
@@ -1004,8 +692,8 @@ export default function CADDepartment() {
         status: "completed",
         software,
         notes: designNotes,
-        designStages,
-        currentStage: currentStageId,
+        designStages: [],
+        currentStage: "",
         annotations,
         versions,
         designFiles,
@@ -1064,9 +752,6 @@ export default function CADDepartment() {
     return `${Math.floor(mins / 60)} ساعة ${mins % 60} دقيقة`;
   };
 
-  const completedStagesCount = designStages.filter(s => s.status === "completed").length;
-  const progressPercent = designStages.length > 0 ? Math.round((completedStagesCount / designStages.length) * 100) : 0;
-
   const saveDesignRef = useRef(saveDesign);
   saveDesignRef.current = saveDesign;
 
@@ -1119,11 +804,6 @@ export default function CADDepartment() {
             <span className="text-xs text-gray-400">{selectedCase.patientName} | {selectedCase.doctorName}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-gray-400">التقدم:</span>
-            <div className="w-32 h-2 bg-gray-700 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all" style={{ width: `${progressPercent}%` }} />
-            </div>
-            <span className="text-[10px] text-green-400 font-bold">{progressPercent}%</span>
             <div className="h-6 w-px bg-gray-600" />
             <Button size="sm" variant="ghost" className="text-white hover:bg-gray-700 gap-1 text-xs" onClick={saveDesign}>
               <Save className="w-3 h-3" /> حفظ
@@ -1150,23 +830,13 @@ export default function CADDepartment() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            {completedStagesCount === designStages.length && designStages.length > 0 && (
+            {selectedCase?.cadData?.status === "in_progress" && (
               <Button size="sm" className="bg-green-600 hover:bg-green-700 gap-1 text-xs" onClick={completeDesign}>
                 <CheckCircle className="w-3 h-3" /> إنهاء التصميم
               </Button>
             )}
           </div>
         </div>
-
-        {/* Stage Pipeline */}
-        <Card className="p-2">
-          <StagePipeline
-            stages={designStages}
-            currentStage={currentStageId}
-            onStageClick={setCurrentStageId}
-            onStageComplete={completeStage}
-          />
-        </Card>
 
         {/* Main workspace */}
         <div className="flex-1 flex gap-2 min-h-0">
@@ -1267,42 +937,11 @@ export default function CADDepartment() {
               <span className="text-blue-600">S</span> حفظ
             </div>
 
-            {/* Stage Action Panel - إجراءات المرحلة */}
+            {/* تصدير STL */}
             <div className="absolute top-3 right-3 z-10">
-              <StageActionPanel
-                stageIndex={parseInt(currentStageId.replace("stage_", ""), 10) || 0}
-                stageNameAr={designStages.find((s) => s.id === currentStageId)?.nameAr || "-"}
-                designFiles={designFiles}
-                annotations={annotations}
-                marginType={marginType}
-                connectorSize={connectorSize}
-                wallThickness={wallThickness}
-                insertDirection={insertDirection}
-                setInsertDirection={setInsertDirection}
-                occlusionType={occlusionType}
-                setOcclusionType={setOcclusionType}
-                dieTrimHeight={dieTrimHeight}
-                setDieTrimHeight={setDieTrimHeight}
-                onAddMarginAnnotation={() => {
-                  setAnnotationType("margin_line");
-                  setActiveTool("margin");
-                  toast.info("انقر على النموذج لتحديد موقع خط الحافة");
-                }}
-                onAddContactAnnotation={() => {
-                  setAnnotationType("contact_point");
-                  setActiveTool("contact");
-                  toast.info("انقر على النموذج لتحديد موقع نقطة التماس");
-                }}
-                onAddThicknessAnnotation={() => {
-                  setAnnotationType("thickness");
-                  setActiveTool("thickness");
-                  toast.info("انقر على النموذج لتحديد موقع قياس السمك");
-                }}
-                onExportSTL={() => handleExportForSoftware(software)}
-                onCompleteStage={() => completeStage(currentStageId)}
-                canComplete={!!designStages.find((s) => s.id === currentStageId && s.status === "in_progress")}
-                onRejectStage={() => rejectStage(currentStageId)}
-              />
+              <Button size="sm" className="bg-green-600 hover:bg-green-700 gap-1 text-xs shadow-lg" onClick={() => handleExportForSoftware(software)}>
+                <FileDown className="w-3.5 h-3.5" /> تصدير STL
+              </Button>
             </div>
           </div>
 
@@ -1617,9 +1256,8 @@ export default function CADDepartment() {
                 <Textarea value={versionNotes} onChange={e => setVersionNotes(e.target.value)}
                   placeholder="التغييرات في هذا الإصدار..." className="text-xs min-h-[60px]" />
               </div>
-              <div className="bg-gray-50 p-2 rounded text-[10px] space-y-1">
+              <div className="bg-gray-50 p-2 rounded text-[10px]">
                 <p>سيتم حفظ: {annotations.length} علامة</p>
-                <p>المرحلة: {designStages.find(s => s.id === currentStageId)?.nameAr}</p>
               </div>
             </div>
             <DialogFooter>
@@ -1687,9 +1325,6 @@ export default function CADDepartment() {
             <div className="space-y-3">
               {cases.map((c) => {
                 const cadStatus = c.cadData?.status;
-                const stagesCount = c.cadData?.designStages?.length || 0;
-                const completedCount = c.cadData?.designStages?.filter(s => s.status === "completed").length || 0;
-                const progress = stagesCount > 0 ? Math.round((completedCount / stagesCount) * 100) : 0;
 
                 return (
                   <div key={c.id} className={`p-4 rounded-xl border-2 transition-all hover:shadow-md ${
@@ -1739,19 +1374,6 @@ export default function CADDepartment() {
                     {c.doctorNotes && (
                       <div className="text-xs text-blue-700 bg-blue-50 p-2 rounded-lg mb-3 border border-blue-200">
                         💬 ملاحظات الطبيب: {c.doctorNotes}
-                      </div>
-                    )}
-
-                    {/* Progress bar for in-progress */}
-                    {cadStatus === "in_progress" && stagesCount > 0 && (
-                      <div className="mb-3">
-                        <div className="flex items-center justify-between text-[10px] text-gray-500 mb-1">
-                          <span>تقدم التصميم</span>
-                          <span>{completedCount}/{stagesCount} مراحل ({progress}%)</span>
-                        </div>
-                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all" style={{ width: `${progress}%` }} />
-                        </div>
                       </div>
                     )}
 

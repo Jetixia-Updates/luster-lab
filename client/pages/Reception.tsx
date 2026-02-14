@@ -83,14 +83,16 @@ export default function Reception() {
     }
   };
 
-  const handleTransfer = async (caseId: string) => {
+  const handleTransfer = async (c: DentalCase) => {
+    const toRemovable = ["removable", "ortho", "denture"].includes(c.workType);
+    const toStatus = toRemovable ? "removable" : "cad_design";
     try {
-      await api.post<any>(`/cases/${caseId}/transfer`, {
-        toStatus: "cad_design",
-        notes: "Transferred from reception",
+      await api.post<any>(`/cases/${c.id}/transfer`, {
+        toStatus,
+        notes: toRemovable ? "Transferred to Removable Dept" : "Transferred from reception",
       });
-      toast.success("تم تحويل الحالة لقسم التصميم");
-      setReceptionCases(receptionCases.filter((c) => c.id !== caseId));
+      toast.success(toRemovable ? "تم تحويل الحالة لقسم التركيبات المتحركة" : "تم تحويل الحالة لقسم التصميم");
+      setReceptionCases(receptionCases.filter((x) => x.id !== c.id));
     } catch (err: any) {
       toast.error(err.message);
     }
@@ -269,9 +271,9 @@ export default function Reception() {
                         <Eye className="w-4 h-4" />
                       </Button>
                     </Link>
-                    <Button size="sm" onClick={() => handleTransfer(c.id)} className="gap-1">
+                    <Button size="sm" onClick={() => handleTransfer(c)} className="gap-1">
                       <Send className="w-4 h-4" />
-                      تحويل للتصميم
+                      {["removable", "ortho", "denture"].includes(c.workType) ? "تحويل للتركيبات المتحركة" : "تحويل للتصميم"}
                     </Button>
                   </div>
                 </div>

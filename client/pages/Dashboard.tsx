@@ -13,7 +13,7 @@ import {
   PieChart, Pie, Cell, LineChart, Line, Legend,
 } from "recharts";
 import {
-  ClipboardList, PenTool, Cpu, Paintbrush, ShieldCheck,
+  ClipboardList, PenTool, Cpu, Paintbrush, Workflow, ShieldCheck,
   Calculator, Truck, Package, AlertTriangle, TrendingUp,
   Users, Clock, CheckCircle, ArrowLeftCircle, Activity,
 } from "lucide-react";
@@ -24,6 +24,7 @@ const DEPT_ICONS: Record<string, any> = {
   cad_design: PenTool,
   cam_milling: Cpu,
   finishing: Paintbrush,
+  removable: Workflow,
   quality_control: ShieldCheck,
   accounting: Calculator,
   ready_for_delivery: Truck,
@@ -101,13 +102,14 @@ export default function Dashboard() {
                 status === "cad_design" ? stats?.casesInCAD :
                 status === "cam_milling" ? stats?.casesInCAM :
                 status === "finishing" ? stats?.casesInFinishing :
+                status === "removable" ? stats?.casesInRemovable :
                 status === "quality_control" ? stats?.casesInQC :
                 status === "ready_for_delivery" ? stats?.casesReadyForDelivery :
                 status === "accounting" ? 0 : 0;
               const routes: Record<string, string> = {
                 reception: "/reception", cad_design: "/cad", cam_milling: "/cam",
-                finishing: "/finishing", quality_control: "/qc", accounting: "/accounting",
-                ready_for_delivery: "/delivery",
+                finishing: "/finishing", removable: "/removable", quality_control: "/qc",
+                accounting: "/accounting", ready_for_delivery: "/delivery",
               };
               return (
                 <Link key={status} to={routes[status] || "/cases"}>

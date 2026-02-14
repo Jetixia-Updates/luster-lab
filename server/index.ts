@@ -22,7 +22,7 @@ import { login, getMe, getUsers, createUser, updateUser, toggleUserActive } from
 import { getDoctors, getDoctor, createDoctor, updateDoctor, deleteDoctor, getPatients, createPatient, updatePatient } from "./routes/doctors";
 import {
   getCases, getCase, createCase, updateCase, deleteCase,
-  transferCase, updateCADData, updateCAMData, updateFinishingData, updateQCData,
+  transferCase, updateCADData, updateCAMData, updateFinishingData, updateRemovableData, updateQCData,
 } from "./routes/cases";
 import {
   getInventory, getInventoryItem, createInventoryItem, updateInventoryItem, deleteInventoryItem,
@@ -103,6 +103,7 @@ export function createServer() {
   app.put("/api/cases/:id/cad", updateCADData);
   app.put("/api/cases/:id/cam", updateCAMData);
   app.put("/api/cases/:id/finishing", updateFinishingData);
+  app.put("/api/cases/:id/removable", updateRemovableData);
   app.put("/api/cases/:id/qc", updateQCData);
 
   // ── Inventory Routes ─────────────────────────────

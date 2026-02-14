@@ -45,360 +45,10 @@ const MACHINES = [
   { id: "mill_5", name: "Sirona CEREC", axes: 4, wet: false },
 ];
 
-const CAM_STAGES_TEMPLATE: Omit<CAMStage, "id" | "status">[] = [
-  { name: "STL Import", nameAr: "استيراد STL" },
-  { name: "Job Setup", nameAr: "إعداد الوظيفة" },
-  { name: "Block Selection", nameAr: "اختيار البلوك" },
-  { name: "Block Mounting", nameAr: "تثبيت البلوك" },
-  { name: "Start Milling", nameAr: "بدء التفريز" },
-  { name: "Monitoring", nameAr: "مراقبة التشغيل" },
-  { name: "Part Removal", nameAr: "إخراج القطعة" },
-  { name: "Post-Mill Clean", nameAr: "تنظيف ما بعد التفريز" },
-  { name: "Preliminary Check", nameAr: "فحص أولي" },
-  { name: "Ready for Finishing", nameAr: "جاهز للتشطيب" },
-];
-
-// ── CAM Stage Action Panel ────────
 const MILLING_STRATEGIES = [
   { id: "wet", nameAr: "رطب", icon: Droplets },
   { id: "dry", nameAr: "جاف", icon: Thermometer },
 ];
-
-function CAMStageActionPanel({
-  stageIndex,
-  stageNameAr,
-  cadDesignFilesCount,
-  camStlFiles,
-  onStlFileChange,
-  millingStrategy,
-  setMillingStrategy,
-  selectedMachine,
-  setSelectedMachine,
-  selectedBlock,
-  blocksForCase,
-  onBlockSelect,
-  blockMounted,
-  setBlockMounted,
-  millingStartTime,
-  onStartMilling,
-  partRemoved,
-  setPartRemoved,
-  cleanDone,
-  setCleanDone,
-  inspectionPassed,
-  setInspectionPassed,
-  inspectionNotes,
-  setInspectionNotes,
-  onAddError,
-  onCompleteStage,
-  canComplete,
-  onRejectStage,
-  onTransferToFinishing,
-  machines,
-  getElapsed,
-}: {
-  stageIndex: number;
-  stageNameAr: string;
-  cadDesignFilesCount: number;
-  camStlFiles: { id: string; fileName: string }[];
-  onStlFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  millingStrategy: string;
-  setMillingStrategy: (v: string) => void;
-  selectedMachine: string;
-  setSelectedMachine: (v: string) => void;
-  selectedBlock: InventoryItem | null;
-  blocksForCase: InventoryItem[];
-  onBlockSelect: (block: InventoryItem | null) => void;
-  blockMounted: boolean;
-  setBlockMounted: (v: boolean) => void;
-  millingStartTime: string | null;
-  onStartMilling: () => void;
-  partRemoved: boolean;
-  setPartRemoved: (v: boolean) => void;
-  cleanDone: boolean;
-  setCleanDone: (v: boolean) => void;
-  inspectionPassed: boolean | null;
-  setInspectionPassed: (v: boolean | null) => void;
-  inspectionNotes: string;
-  setInspectionNotes: (v: string) => void;
-  onAddError: () => void;
-  onCompleteStage: () => void;
-  canComplete: boolean;
-  onRejectStage: () => void;
-  onTransferToFinishing: () => void;
-  machines: typeof MACHINES;
-  getElapsed: (startTime?: string) => string | null;
-}) {
-  const stagePanels: Record<number, React.ReactNode> = {
-    0: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">استيراد ملف STL من التصميم أو رفع ملف جديد</p>
-        {cadDesignFilesCount > 0 && (
-          <div className="text-[10px] text-green-600 flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3" /> {cadDesignFilesCount} ملف من التصميم
-          </div>
-        )}
-        <label className="flex items-center justify-center gap-1.5 w-full h-8 rounded border border-dashed border-orange-300 bg-orange-50/50 hover:bg-orange-50 cursor-pointer text-xs text-orange-700">
-          <FileUp className="w-3.5 h-3.5" /> رفع STL
-          <input type="file" accept=".stl" className="hidden" onChange={onStlFileChange} />
-        </label>
-        {camStlFiles.length > 0 && (
-          <p className="text-[10px] text-green-600">{camStlFiles.length} ملف محلي</p>
-        )}
-      </div>
-    ),
-    1: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">إعداد الوظيفة والماكينة</p>
-        <Select value={selectedMachine} onValueChange={setSelectedMachine}>
-          <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {machines.map((m) => (
-              <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <div>
-          <Label className="text-[10px]">طريقة التفريز</Label>
-          <div className="flex gap-1 mt-1">
-            {MILLING_STRATEGIES.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => setMillingStrategy(s.id)}
-                className={`flex-1 flex items-center justify-center gap-1 p-1.5 rounded border text-[10px] ${
-                  millingStrategy === s.id ? "border-orange-500 bg-orange-50" : "border-gray-200"
-                }`}
-              >
-                <s.icon className="w-3 h-3" /> {s.nameAr}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    ),
-    2: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">اختر البلوك المناسب</p>
-        <Select
-          value={selectedBlock?.id || ""}
-          onValueChange={(v) => onBlockSelect(blocksForCase.find((b) => b.id === v) || null)}
-        >
-          <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="اختر البلوك" /></SelectTrigger>
-          <SelectContent>
-            {blocksForCase.length === 0 ? (
-              <SelectItem value="_none" disabled>لا توجد بلوكات</SelectItem>
-            ) : (
-              blocksForCase.map((b) => (
-                <SelectItem key={b.id} value={b.id}>{b.nameAr || b.name} ({b.currentStock})</SelectItem>
-              ))
-            )}
-          </SelectContent>
-        </Select>
-        {selectedBlock && (
-          <p className="text-[10px] text-green-600 flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3" /> {selectedBlock.nameAr || selectedBlock.name}
-          </p>
-        )}
-      </div>
-    ),
-    3: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">تثبيت البلوك في الماكينة</p>
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant={blockMounted ? "default" : "outline"}
-            className="flex-1 h-8 text-xs gap-1"
-            onClick={() => setBlockMounted(true)}
-          >
-            <Package className="w-3 h-3" /> تم التثبيت
-          </Button>
-          {blockMounted && (
-            <div className="text-[10px] text-green-600 flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3" />
-            </div>
-          )}
-        </div>
-      </div>
-    ),
-    4: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">بدء عملية التفريز</p>
-        {!millingStartTime ? (
-          <Button size="sm" className="w-full h-8 gap-1 bg-orange-600 hover:bg-orange-700" onClick={onStartMilling}>
-            <Play className="w-4 h-4" /> بدء التفريز
-          </Button>
-        ) : (
-          <div className="text-[10px] text-green-600 flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3" /> بدأ التفريز
-          </div>
-        )}
-      </div>
-    ),
-    5: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">مراقبة التشغيل</p>
-        {millingStartTime && (
-          <Badge variant="outline" className="gap-1 text-xs">
-            <Clock className="w-3 h-3" /> {getElapsed(millingStartTime)}
-          </Badge>
-        )}
-        <Button size="sm" variant="outline" className="w-full h-7 text-xs gap-1" onClick={onAddError}>
-          <AlertTriangle className="w-3 h-3" /> تسجيل خطأ
-        </Button>
-      </div>
-    ),
-    6: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">إخراج القطعة من الماكينة</p>
-        <Button
-          size="sm"
-          variant={partRemoved ? "default" : "outline"}
-          className="w-full h-8 text-xs gap-1"
-          onClick={() => setPartRemoved(true)}
-        >
-          <PackageOpen className="w-3 h-3" /> تم الإخراج
-        </Button>
-        {partRemoved && (
-          <p className="text-[10px] text-green-600 flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3" /> تم إخراج القطعة
-          </p>
-        )}
-      </div>
-    ),
-    7: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">تنظيف ما بعد التفريز</p>
-        <Button
-          size="sm"
-          variant={cleanDone ? "default" : "outline"}
-          className="w-full h-8 text-xs gap-1"
-          onClick={() => setCleanDone(true)}
-        >
-          <Sparkles className="w-3 h-3" /> تم التنظيف
-        </Button>
-        {cleanDone && (
-          <p className="text-[10px] text-green-600 flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3" /> تنظيف الماكينة مكتمل
-          </p>
-        )}
-      </div>
-    ),
-    8: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">فحص أولي للقطعة</p>
-        <div className="flex gap-1">
-          <Button
-            size="sm"
-            variant={inspectionPassed === true ? "default" : "outline"}
-            className="flex-1 h-7 text-xs"
-            onClick={() => setInspectionPassed(true)}
-          >
-            <CheckCircle className="w-3 h-3" /> مقبول
-          </Button>
-          <Button
-            size="sm"
-            variant={inspectionPassed === false ? "destructive" : "outline"}
-            className="flex-1 h-7 text-xs"
-            onClick={() => setInspectionPassed(false)}
-          >
-            <XCircle className="w-3 h-3" /> مرفوض
-          </Button>
-        </div>
-        <Input
-          value={inspectionNotes}
-          onChange={(e) => setInspectionNotes(e.target.value)}
-          placeholder="ملاحظات الفحص..."
-          className="h-7 text-xs"
-        />
-      </div>
-    ),
-    9: (
-      <div className="space-y-2">
-        <p className="text-xs text-gray-600">جاهز للتشطيب</p>
-        <div className="text-[10px] text-muted-foreground space-y-0.5">
-          <p>✓ التفريز مكتمل</p>
-          <p>✓ الفحص أولي: {inspectionPassed === true ? "مقبول" : inspectionPassed === false ? "مرفوض" : "-"}</p>
-        </div>
-        <Button size="sm" className="w-full h-8 gap-1 bg-green-600 hover:bg-green-700" onClick={onTransferToFinishing}>
-          <Send className="w-3 h-3" /> تحويل للتشطيب
-        </Button>
-      </div>
-    ),
-  };
-
-  const content = stagePanels[stageIndex];
-
-  return (
-    <div className="bg-white rounded-lg p-3 shadow border">
-      <p className="text-[10px] text-gray-500 mb-1">المرحلة {stageIndex + 1}/10</p>
-      <p className="text-sm font-bold text-orange-700 mb-2">{stageNameAr}</p>
-      {content}
-      {stageIndex < 9 && (
-        <div className="flex gap-1 mt-3">
-          <Button size="sm" className="flex-1 h-7 text-xs gap-0.5" onClick={onCompleteStage} disabled={!canComplete}>
-            <CheckCircle className="w-3 h-3" /> إتمام
-          </Button>
-          <Button size="sm" variant="outline" className="flex-1 h-7 text-xs text-red-600 border-red-300" onClick={onRejectStage}>
-            <XCircle className="w-3 h-3" /> رفض
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Stage Pipeline Component ────────
-function StagePipeline({
-  stages,
-  currentStage,
-  onStageClick,
-  onStageComplete,
-}: {
-  stages: CAMStage[];
-  currentStage: string;
-  onStageClick: (id: string) => void;
-  onStageComplete: (id: string) => void;
-}) {
-  return (
-    <div className="flex gap-1 overflow-x-auto pb-2">
-      {stages.map((stage, idx) => {
-        const isActive = stage.id === currentStage;
-        const isCompleted = stage.status === "completed";
-        const isRejected = stage.status === "rejected";
-        const isInProgress = stage.status === "in_progress";
-        return (
-          <div key={stage.id} className="flex items-center">
-            <button
-              onClick={() => onStageClick(stage.id)}
-              className={`flex flex-col items-center px-2 py-1.5 rounded-lg text-[10px] min-w-[70px] transition-all border ${
-                isActive ? "bg-orange-100 border-orange-400 shadow-md scale-105" :
-                isCompleted ? "bg-green-50 border-green-300" :
-                isRejected ? "bg-red-50 border-red-300" :
-                isInProgress ? "bg-amber-50 border-amber-300" :
-                "bg-gray-50 border-gray-200 hover:bg-gray-100"
-              }`}
-            >
-              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-bold mb-0.5 ${
-                isCompleted ? "bg-green-500" : isRejected ? "bg-red-500" :
-                isInProgress ? "bg-amber-500" : isActive ? "bg-orange-500" : "bg-gray-300"
-              }`}>
-                {isCompleted ? "✓" : isRejected ? "✗" : idx + 1}
-              </div>
-              <span className={`text-center leading-tight ${isActive ? "font-bold text-orange-700" : ""}`}>
-                {stage.nameAr}
-              </span>
-              {isInProgress && <span className="text-[8px] text-amber-600 mt-0.5">جارٍ...</span>}
-            </button>
-            {idx < stages.length - 1 && (
-              <ChevronRight className={`w-3 h-3 mx-0.5 flex-shrink-0 ${isCompleted ? "text-green-400" : "text-gray-300"}`} />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 export default function CAMDepartment() {
   const { user } = useAuth();
@@ -409,8 +59,6 @@ export default function CAMDepartment() {
   const [viewMode, setViewMode] = useState<"list" | "workspace">("list");
 
   // Workspace state
-  const [stages, setStages] = useState<CAMStage[]>([]);
-  const [currentStageId, setCurrentStageId] = useState("");
   const [selectedMachine, setSelectedMachine] = useState("mill_1");
   const [selectedBlock, setSelectedBlock] = useState<InventoryItem | null>(null);
   const [camNotes, setCamNotes] = useState("");
@@ -446,20 +94,6 @@ export default function CAMDepartment() {
     setSelectedCase(c);
     setViewMode("workspace");
     api.get<any>("/inventory?category=blocks").then((r) => setInventory(r.data || []));
-
-    const existing = c.camData?.stages || [];
-    if (existing.length === 0) {
-      const newStages: CAMStage[] = CAM_STAGES_TEMPLATE.map((s, i) => ({
-        ...s,
-        id: `cam_stage_${i}`,
-        status: i === 0 ? "in_progress" as const : "pending" as const,
-      }));
-      setStages(newStages);
-      setCurrentStageId("cam_stage_0");
-    } else {
-      setStages(existing);
-      setCurrentStageId(c.camData?.currentStage || existing[0]?.id || "");
-    }
 
     setSelectedMachine(c.camData?.machineId || "mill_1");
     setCamNotes(c.camData?.notes || "");
@@ -499,8 +133,8 @@ export default function CAMDepartment() {
         operatorId: user?.id,
         operatorName: user?.fullNameAr || user?.fullName,
         status: "in_progress",
-        stages,
-        currentStage: currentStageId,
+        stages: [],
+        currentStage: "",
         machineId: selectedMachine,
         machineName: MACHINES.find((m) => m.id === selectedMachine)?.name,
         blockType: selectedBlock ? selectedBlock.nameAr || selectedBlock.name : "",
@@ -526,36 +160,6 @@ export default function CAMDepartment() {
     }
   };
 
-  const completeStage = (stageId: string) => {
-    setStages((prev) => {
-      const updated = prev.map((s, i, arr) => {
-        if (s.id === stageId) return { ...s, status: "completed" as const, endTime: new Date().toISOString() };
-        const prevIdx = arr.findIndex((x) => x.id === stageId);
-        if (i === prevIdx + 1 && (s.status === "pending" || s.status === "rejected")) {
-          return { ...s, status: "in_progress" as const, startTime: new Date().toISOString() };
-        }
-        return s;
-      });
-      const nextIdx = updated.findIndex((s) => s.status === "in_progress");
-      if (nextIdx >= 0) setCurrentStageId(updated[nextIdx].id);
-      return updated;
-    });
-    toast.success("تم إتمام المرحلة");
-  };
-
-  const rejectStage = (stageId: string) => {
-    setStages((prev) => {
-      const idx = prev.findIndex((s) => s.id === stageId);
-      const updated = prev.map((s) => (s.id === stageId ? { ...s, status: "rejected" as const } : s));
-      if (idx > 0) {
-        updated[idx - 1] = { ...updated[idx - 1], status: "in_progress" as const, startTime: new Date().toISOString() };
-        setCurrentStageId(updated[idx - 1].id);
-      }
-      return updated;
-    });
-    toast.warning("تم رفض المرحلة");
-  };
-
   const completeCAM = async () => {
     if (!selectedCase) return;
     try {
@@ -575,8 +179,8 @@ export default function CAMDepartment() {
         operatorId: user?.id,
         operatorName: user?.fullNameAr || user?.fullName,
         status: "completed",
-        stages,
-        currentStage: currentStageId,
+        stages: [],
+        currentStage: "",
         machineId: selectedMachine,
         machineName: MACHINES.find((m) => m.id === selectedMachine)?.name,
         blockType: selectedBlock ? selectedBlock.nameAr || selectedBlock.name : "",
@@ -595,7 +199,8 @@ export default function CAMDepartment() {
         inspectionPassed,
         inspectionNotes,
       });
-      toast.success(`تم إكمال التفريز (${duration} دقيقة)`);
+      await api.post<any>(`/cases/${selectedCase.id}/transfer`, { toStatus: "finishing", notes: "CAM مكتمل - تحويل للتشطيب" });
+      toast.success(`تم إكمال التفريز والتحويل للتشطيب (${duration} دقيقة)`);
       setViewMode("list");
       reload();
     } catch (err: any) {
@@ -660,60 +265,6 @@ export default function CAMDepartment() {
     toast.success("تم بدء التفريز");
   };
 
-  const handleTransferFromStage9 = async () => {
-    if (!selectedCase) return;
-    const updatedStages = stages.map((s) =>
-      s.id === currentStageId ? { ...s, status: "completed" as const, endTime: new Date().toISOString() } : s
-    );
-    setStages(updatedStages);
-    try {
-      if (selectedBlock) {
-        await api.post<any>(`/inventory/${selectedBlock.id}/deduct`, {
-          quantity: 1,
-          caseId: selectedCase.id,
-          caseNumber: selectedCase.caseNumber,
-          reason: `خصم تفريز - ${selectedCase.caseNumber}`,
-        });
-      }
-      const startTime = selectedCase.camData?.startTime ? new Date(selectedCase.camData.startTime).getTime() : Date.now();
-      const duration = Math.round((Date.now() - startTime) / 60000);
-      await api.put<any>(`/cases/${selectedCase.id}/cam`, {
-        operatorId: user?.id,
-        operatorName: user?.fullNameAr || user?.fullName,
-        status: "completed",
-        stages: updatedStages,
-        currentStage: currentStageId,
-        machineId: selectedMachine,
-        machineName: MACHINES.find((m) => m.id === selectedMachine)?.name,
-        blockType: selectedBlock ? selectedBlock.nameAr || selectedBlock.name : "",
-        blockId: selectedBlock?.id,
-        endTime: new Date().toISOString(),
-        millingDuration: duration,
-        materialDeducted: !!selectedBlock,
-        notes: camNotes,
-        errors,
-        camStlFiles,
-        millingStrategy,
-        blockMounted,
-        millingStartTime,
-        partRemoved,
-        cleanDone,
-        inspectionPassed,
-        inspectionNotes,
-      });
-      await api.post<any>(`/cases/${selectedCase.id}/transfer`, { toStatus: "finishing", notes: "CAM مكتمل - تحويل للتشطيب" });
-      toast.success("تم إكمال التفريز والتحويل للتشطيب");
-      setViewMode("list");
-      reload();
-    } catch (err: any) {
-      toast.error(err?.message || "خطأ");
-    }
-  };
-
-  const completedCount = stages.filter((s) => s.status === "completed").length;
-  const progressPercent = stages.length > 0 ? Math.round((completedCount / stages.length) * 100) : 0;
-  const allStagesComplete = completedCount === stages.length && stages.length > 0;
-
   const getElapsed = (startTime?: string) => {
     if (!startTime) return null;
     const mins = Math.floor((Date.now() - new Date(startTime).getTime()) / 60000);
@@ -736,63 +287,18 @@ export default function CAMDepartment() {
             <span className="text-xs text-gray-400">{selectedCase.patientName} | {selectedCase.shadeColor}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-gray-400">التقدم:</span>
-            <div className="w-32 h-2 bg-gray-700 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-orange-500 to-green-500" style={{ width: `${progressPercent}%` }} />
-            </div>
-            <span className="text-[10px] text-green-400 font-bold">{progressPercent}%</span>
             <Button size="sm" variant="ghost" className="text-white hover:bg-gray-700 gap-1 text-xs" onClick={saveCAM}>
               حفظ
             </Button>
-            {allStagesComplete && (
-              <Button size="sm" className="bg-green-600 hover:bg-green-700 gap-1 text-xs" onClick={completeCAM}>
-                <CheckCircle className="w-3 h-3" /> إنهاء التفريز
-              </Button>
-            )}
+            <Button size="sm" className="bg-green-600 hover:bg-green-700 gap-1 text-xs" onClick={completeCAM}>
+              <CheckCircle className="w-3 h-3" /> إنهاء التفريز وتحويل للتشطيب
+            </Button>
           </div>
         </div>
 
-        <Card className="p-2">
-          <StagePipeline stages={stages} currentStage={currentStageId} onStageClick={setCurrentStageId} onStageComplete={completeStage} />
-        </Card>
-
         <div className="flex-1 flex gap-4 min-h-0">
-          {/* Left: Case info + Stage actions */}
+          {/* Left: Machine, Block, Notes */}
           <div className="w-80 flex flex-col gap-3 overflow-y-auto">
-            <CAMStageActionPanel
-              stageIndex={parseInt(currentStageId.replace("cam_stage_", ""), 10) || 0}
-              stageNameAr={stages.find((s) => s.id === currentStageId)?.nameAr || "-"}
-              cadDesignFilesCount={selectedCase?.cadData?.designFiles?.length || 0}
-              camStlFiles={camStlFiles}
-              onStlFileChange={onStlFileChange}
-              millingStrategy={millingStrategy}
-              setMillingStrategy={setMillingStrategy}
-              selectedMachine={selectedMachine}
-              setSelectedMachine={setSelectedMachine}
-              selectedBlock={selectedBlock}
-              blocksForCase={blocksForCase}
-              onBlockSelect={setSelectedBlock}
-              blockMounted={blockMounted}
-              setBlockMounted={setBlockMounted}
-              millingStartTime={millingStartTime}
-              onStartMilling={onStartMilling}
-              partRemoved={partRemoved}
-              setPartRemoved={setPartRemoved}
-              cleanDone={cleanDone}
-              setCleanDone={setCleanDone}
-              inspectionPassed={inspectionPassed}
-              setInspectionPassed={setInspectionPassed}
-              inspectionNotes={inspectionNotes}
-              setInspectionNotes={setInspectionNotes}
-              onAddError={() => setShowAddErrorDialog(true)}
-              onCompleteStage={() => completeStage(currentStageId)}
-              canComplete={!!stages.find((s) => s.id === currentStageId && s.status === "in_progress")}
-              onRejectStage={() => rejectStage(currentStageId)}
-              onTransferToFinishing={handleTransferFromStage9}
-              machines={MACHINES}
-              getElapsed={getElapsed}
-            />
-
             <Card>
               <CardHeader className="py-2 px-3 flex flex-row justify-between">
                 <CardTitle className="text-xs flex items-center gap-1"><HardDrive className="w-3 h-3" /> الماكينة</CardTitle>
@@ -957,9 +463,6 @@ export default function CAMDepartment() {
           ) : (
             <div className="space-y-3">
               {cases.map((c) => {
-                const stagesCount = c.camData?.stages?.length || 0;
-                const completedCount = c.camData?.stages?.filter((s) => s.status === "completed").length || 0;
-                const progress = stagesCount > 0 ? Math.round((completedCount / stagesCount) * 100) : 0;
                 const elapsed = c.camData?.startTime ? Math.round((Date.now() - new Date(c.camData.startTime).getTime()) / 60000) : 0;
 
                 return (
@@ -999,18 +502,6 @@ export default function CAMDepartment() {
                       <div><span className="text-muted-foreground text-xs">اللون:</span> {c.shadeColor}</div>
                       <div><span className="text-muted-foreground text-xs">البلوك:</span> {c.camData?.blockType || "-"}</div>
                     </div>
-
-                    {stagesCount > 0 && c.camData?.status === "in_progress" && (
-                      <div className="mb-3">
-                        <div className="flex justify-between text-[10px] text-gray-500 mb-1">
-                          <span>تقدم التفريز</span>
-                          <span>{completedCount}/{stagesCount} مراحل ({progress}%)</span>
-                        </div>
-                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-orange-500 to-green-500" style={{ width: `${progress}%` }} />
-                        </div>
-                      </div>
-                    )}
 
                     <div className="flex gap-2 flex-wrap">
                       {(!c.camData || c.camData.status === "pending") && (

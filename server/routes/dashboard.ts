@@ -43,6 +43,7 @@ export const getDashboardStats: RequestHandler = (_req, res) => {
     casesInCAD: cases.filter((c) => c.currentStatus === "cad_design").length,
     casesInCAM: cases.filter((c) => c.currentStatus === "cam_milling").length,
     casesInFinishing: cases.filter((c) => c.currentStatus === "finishing").length,
+    casesInRemovable: cases.filter((c) => c.currentStatus === "removable").length,
     casesInQC: cases.filter((c) => c.currentStatus === "quality_control").length,
     casesReadyForDelivery: cases.filter((c) => c.currentStatus === "ready_for_delivery").length,
     casesDeliveredToday: deliveredToday.length,

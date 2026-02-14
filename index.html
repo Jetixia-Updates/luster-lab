@@ -10,13 +10,21 @@
     <meta name="format-detection" content="telephone=no" />
     <title>Luster Dental Lab - نظام إدارة معمل لاستر لطب الأسنان</title>
     <link rel="manifest" href="/manifest.json" />
-    <link rel="icon" type="image/png" href="/icon-192.png" />
-    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="icon" type="image/png" href="/logo1.png" />
+    <link rel="apple-touch-icon" href="/logo1.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   </head>
   <body>
+    <div id="splash" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#2563eb,#1d4ed8,#0d9488);z-index:9999;transition:opacity .4s ease-out">
+      <div style="background:rgba(255,255,255,.1);backdrop-filter:blur(8px);padding:1.5rem;border-radius:1rem;margin-bottom:1.5rem;box-shadow:0 25px 50px -12px rgba(0,0,0,.25)">
+        <img src="/logo1.png" alt="لاستر" style="width:7rem;height:7rem;object-fit:contain" />
+      </div>
+      <h1 style="color:#fff;font-size:1.5rem;font-weight:700;margin:0 0 .25rem">معمل لاستر لطب الأسنان</h1>
+      <p style="color:rgba(255,255,255,.8);font-size:.875rem;margin:0 0 1rem">Luster Dental Lab</p>
+      <p style="color:rgba(255,255,255,.6);font-size:.75rem">جاري التحميل...</p>
+    </div>
     <div id="root"></div>
     <script type="module" src="/client/main.tsx"></script>
   </body>

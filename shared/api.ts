@@ -35,12 +35,40 @@ export type CaseStatus =
   | "cad_design"
   | "cam_milling"
   | "finishing"
+  | "removable"
   | "quality_control"
   | "accounting"
   | "ready_for_delivery"
   | "delivered"
   | "returned"
   | "cancelled";
+
+/** أنواع التركيبات المتحركة */
+export type RemovableProstheticType =
+  | "denture_soft"
+  | "denture_hard"
+  | "denture_repair"
+  | "add_teeth"
+  | "soft_relining"
+  | "base_change"
+  | "temp_acrylic_crown"
+  | "other";
+
+/** أنواع التقويم (مع التركيبات المتحركة) */
+export type OrthoRemovableType =
+  | "twin_block"
+  | "expansion_appliance"
+  | "hawley_retainer"
+  | "space_maintainer";
+
+/** مراحل قسم التركيبات المتحركة */
+export type RemovableStageName =
+  | "tooth_arrangement"
+  | "acrylic_cooking"
+  | "ready";
+
+/** الحالة النهائية للتركيبات المتحركة */
+export type RemovableFinalStatus = "try_in" | "delivery";
 
 export type DepartmentStageStatus =
   | "pending"
@@ -166,6 +194,7 @@ export interface DentalCase {
   cadData?: CADData;
   camData?: CAMData;
   finishingData?: FinishingData;
+  removableData?: RemovableData;
   qcData?: QCData;
   
   // Financial
@@ -360,6 +389,67 @@ export interface ColoringStage {
   notes?: string;
 }
 
+export interface RemovableStage {
+  id: string;
+  name: string;
+  nameAr: string;
+  status: "pending" | "in_progress" | "completed" | "rejected";
+  startTime?: string;
+  endTime?: string;
+  notes?: string;
+}
+
+export interface PauseRecord {
+  id: string;
+  reason: string;
+  reasonAr?: string;
+  pausedAt: string;
+  pausedBy: string;
+  pausedByName: string;
+  resumedAt?: string;
+  resumedBy?: string;
+  resumedByName?: string;
+}
+
+export interface RemovableData {
+  technicianId?: string;
+  technicianName?: string;
+  status: DepartmentStageStatus;
+  startTime?: string;
+  endTime?: string;
+  stages?: RemovableStage[];
+  currentStage?: string;
+
+  /** نوع التركيبة المتحركة */
+  prostheticType?: RemovableProstheticType;
+  prostheticTypeAr?: string;
+  /** سوفت أو هارد */
+  materialVariant?: "soft" | "hard";
+  /** المقاس بالمم */
+  sizeMm?: number;
+
+  /** تصليح طقم */
+  isRepair?: boolean;
+  /** إضافة أسنان - عدد الأسنان المضافة */
+  teethAddedCount?: number;
+
+  /** نوع التقويم (إن وجد) */
+  orthoType?: OrthoRemovableType;
+  orthoTypeAr?: string;
+
+  /** الإيقاف المؤقت */
+  isPaused?: boolean;
+  pauseRecords?: PauseRecord[];
+  currentPauseReason?: string;
+  currentPauseDate?: string;
+  currentPauseBy?: string;
+
+  /** الحالة النهائية */
+  finalStatus?: RemovableFinalStatus;
+
+  notes?: string;
+}
+
 export interface QCData {
   inspectorId: string;
   inspectorName: string;
@@ -534,6 +624,7 @@ export interface DashboardStats {
   casesInCAD: number;
   casesInCAM: number;
   casesInFinishing: number;
+  casesInRemovable: number;
   casesInQC: number;
   casesReadyForDelivery: number;
   casesDeliveredToday: number;
