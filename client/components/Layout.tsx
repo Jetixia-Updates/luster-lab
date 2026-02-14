@@ -76,11 +76,18 @@ interface Notification {
   type: "warning" | "info" | "success";
   message: string;
   time: string;
+  to?: string; // route to navigate on click
 }
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // على الموبايل: القائمة مغلقة افتراضياً
+  useEffect(() => {
+    const isMobile = () => window.innerWidth < 768;
+    if (isMobile()) setSidebarOpen(false);
+  }, []);
   const [notifications, setNotifications] = useStateLocal<Notification[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
@@ -92,48 +99,71 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     navigate("/", { replace: true });
   };
 
-  // Fetch notifications (low stock alerts, overdue cases, etc.)
+  // Read notification preferences
+  const getNotifPrefs = () => {
+    try {
+      const saved = localStorage.getItem("luster_notif_prefs");
+      return saved ? JSON.parse(saved) : { lowStock: true, rushCases: true, overdueCases: true, overduePayments: true };
+    } catch {
+      return { lowStock: true, rushCases: true, overdueCases: true, overduePayments: true };
+    }
+  };
+
+  // Fetch notifications (low stock, overdue cases, overdue payments, rush cases)
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
+        const prefs = getNotifPrefs();
         const [lowStockRes, statsRes] = await Promise.all([
           api.get<any>("/inventory/low-stock"),
           api.get<any>("/dashboard/stats"),
         ]);
         const notifs: Notification[] = [];
         const lowStock = lowStockRes.data || [];
-        if (lowStock.length > 0) {
+        if (prefs.lowStock && lowStock.length > 0) {
           notifs.push({
             id: "low-stock",
             type: "warning",
             message: `${lowStock.length} صنف تحت الحد الأدنى في المخزن`,
             time: "الآن",
+            to: "/inventory",
           });
         }
         const stats = statsRes.data || {};
-        if (stats.rushCases > 0) {
+        if (prefs.rushCases && stats.rushCases > 0) {
           notifs.push({
             id: "rush",
             type: "warning",
             message: `${stats.rushCases} حالات عاجلة في الانتظار`,
             time: "الآن",
+            to: "/cases",
           });
         }
-        if (stats.overdueCases > 0) {
+        if (prefs.overdueCases && stats.overdueCases > 0) {
           notifs.push({
             id: "overdue",
             type: "warning",
             message: `${stats.overdueCases} حالات تجاوزت موعد التسليم`,
             time: "الآن",
+            to: "/cases",
+          });
+        }
+        if (prefs.overduePayments && stats.overduePayments > 0) {
+          notifs.push({
+            id: "overdue-payments",
+            type: "warning",
+            message: `${stats.overduePayments} فواتير متأخرة السداد`,
+            time: "الآن",
+            to: "/accounting",
           });
         }
         setNotifications(notifs);
       } catch { /* silently fail */ }
     };
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60000); // every minute
+    const interval = setInterval(fetchNotifications, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [location.pathname]); // re-fetch when navigating (prefs may have changed)
 
   return (
     <div className="min-h-screen flex bg-background" dir="rtl">
@@ -149,15 +179,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <aside
         className={cn(
           "fixed md:static inset-y-0 right-0 z-50 flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 no-print",
-          sidebarOpen ? "w-64" : "w-[70px]",
-          mobileOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"
+          "w-[min(300px,90vw)]",
+          sidebarOpen ? "md:w-64" : "md:w-[70px]",
+          mobileOpen ? "translate-x-0 shadow-2xl" : "translate-x-full md:translate-x-0"
         )}
       >
         {/* Logo */}
         <div className="flex items-center gap-3 p-4 border-b border-sidebar-border">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-teal-400 flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-lg shadow-blue-500/20">
-            L
-          </div>
+          <img src="/logo1.png" alt="لاستر" className="w-10 h-10 rounded-lg object-contain shrink-0 bg-white/5" />
           {sidebarOpen && (
             <div className="overflow-hidden">
               <h1 className="font-bold text-base leading-tight">لاستر</h1>
@@ -238,8 +267,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Bar */}
-        <header className="h-14 border-b bg-card/80 backdrop-blur-sm flex items-center justify-between px-4 no-print sticky top-0 z-30">
+        {/* Top Bar - safe area for notched devices */}
+        <header className="h-14 min-h-[3.5rem] pt-[env(safe-area-inset-top)] border-b bg-card/80 backdrop-blur-sm flex items-center justify-between px-3 sm:px-4 no-print sticky top-0 z-30">
           <button
             className="md:hidden p-2 rounded-lg hover:bg-accent"
             onClick={() => setMobileOpen(true)}
@@ -247,12 +276,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <Menu className="w-5 h-5" />
           </button>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground hidden sm:block">
+          <div className="flex items-center gap-2 min-w-0 flex-1 justify-center md:justify-start">
+            <span className="text-xs sm:text-sm text-muted-foreground truncate">
               {new Date().toLocaleDateString("ar-EG", {
-                weekday: "long",
+                weekday: "short",
                 year: "numeric",
-                month: "long",
+                month: "short",
                 day: "numeric",
               })}
             </span>
@@ -279,15 +308,26 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <div className="p-4 text-center text-sm text-muted-foreground">لا توجد إشعارات</div>
                 ) : (
                   <div className="max-h-64 overflow-y-auto">
-                    {notifications.map((n) => (
-                      <div key={n.id} className="flex items-start gap-3 p-3 border-b last:border-0 hover:bg-accent/30 transition-colors">
-                        <AlertTriangle className={cn("w-4 h-4 mt-0.5 shrink-0", n.type === "warning" ? "text-amber-500" : "text-blue-500")} />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm">{n.message}</p>
-                          <p className="text-xs text-muted-foreground">{n.time}</p>
+                    {notifications.map((n) => {
+                      const content = (
+                        <>
+                          <AlertTriangle className={cn("w-4 h-4 mt-0.5 shrink-0", n.type === "warning" ? "text-amber-500" : "text-blue-500")} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm">{n.message}</p>
+                            <p className="text-xs text-muted-foreground">{n.time}</p>
+                          </div>
+                        </>
+                      );
+                      return n.to ? (
+                        <Link key={n.id} to={n.to} className="flex items-start gap-3 p-3 border-b last:border-0 hover:bg-accent/30 transition-colors">
+                          {content}
+                        </Link>
+                      ) : (
+                        <div key={n.id} className="flex items-start gap-3 p-3 border-b last:border-0 hover:bg-accent/30 transition-colors">
+                          {content}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </PopoverContent>
@@ -330,8 +370,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+        {/* Page Content - responsive padding */}
+        <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-y-auto pb-[env(safe-area-inset-bottom)]">
           {children}
         </main>
       </div>

@@ -527,6 +527,8 @@ export interface AuditLog {
 // ========================================
 
 export interface DashboardStats {
+  rushCases?: number;
+  overdueCases?: number;
   totalActiveCases: number;
   casesInReception: number;
   casesInCAD: number;

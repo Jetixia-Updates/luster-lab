@@ -15,6 +15,7 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run build:client && npm run build:server",
+    "prebuild:client": "node scripts/generate-icons.mjs",
     "build:client": "vite build",
     "build:server": "vite build --config vite.config.server.ts",
     "build:netlify": "vite build --config vite.config.netlify.ts",
@@ -96,6 +97,7 @@
     "react-resizable-panels": "^3.0.4",
     "react-router-dom": "^6.30.1",
     "recharts": "^2.12.7",
+    "sharp": "^0.34.5",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
     "tailwindcss": "^3.4.17",

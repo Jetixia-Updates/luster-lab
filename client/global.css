@@ -64,9 +64,15 @@
   * {
     @apply border-border;
   }
+  html {
+    min-height: 100%;
+    min-height: 100dvh; /* Dynamic viewport - أفضل للموبايل */
+  }
   body {
     @apply bg-background text-foreground font-sans;
     font-family: 'Cairo', 'Inter', sans-serif;
+    min-height: 100%;
+    min-height: 100dvh;
   }
   [dir="rtl"] body {
     font-family: 'Cairo', 'Inter', sans-serif;
@@ -95,6 +101,24 @@
 .priority-normal { @apply bg-gray-100 text-gray-700; }
 .priority-urgent { @apply bg-amber-100 text-amber-800; }
 .priority-rush { @apply bg-red-100 text-red-800; }
+
+/* Mobile & PWA - safe area for notched devices (iOS, Android) */
+.safe-area-top { padding-top: env(safe-area-inset-top); }
+.safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+/* Touch-friendly - remove tap highlight, smooth scrolling */
+html { -webkit-tap-highlight-color: transparent; scroll-behavior: smooth; }
+@media (hover: none) {
+  button, a, [role="button"] { min-height: 44px; min-width: 44px; }
+}
+
+/* Horizontal scroll for tables on mobile - smooth touch scrolling */
+.overflow-x-auto, [class*="overflow-x-auto"] { -webkit-overflow-scrolling: touch; }
+
+/* Prevent zoom on input focus (iOS) - optional, 16px prevents zoom */
+@media screen and (max-width: 768px) {
+  input, select, textarea { font-size: 16px !important; }
+}
 
 /* Print styles */
 @media print {

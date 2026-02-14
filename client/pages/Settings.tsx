@@ -451,6 +451,21 @@ export default function Settings() {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              <div className="mb-4 flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
+                <p className="text-sm text-muted-foreground">تفعيل أو إيقاف كل التنبيهات دفعة واحدة</p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const allOn = { lowStock: true, rushCases: true, overdueCases: true, overduePayments: true, caseCompleted: true, dailyReport: true };
+                    setNotifPrefs(allOn);
+                    localStorage.setItem("luster_notif_prefs", JSON.stringify(allOn));
+                    toast.success("تم تفعيل كل التنبيهات");
+                  }}
+                >
+                  تفعيل الكل
+                </Button>
+              </div>
               <div className="space-y-4">
                 {([
                   { key: "lowStock", label: "تنبيه نقص المخزون", desc: "إشعار عند وصول مادة للحد الأدنى" },

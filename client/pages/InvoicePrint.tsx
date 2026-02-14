@@ -54,9 +54,7 @@ export default function InvoicePrint() {
         <div className="flex items-start justify-between border-b-2 border-primary pb-6 mb-6">
           <div>
             <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-600 to-teal-500 flex items-center justify-center text-white text-2xl font-bold">
-                L
-              </div>
+              <img src="/logo1.png" alt="لاستر" className="w-14 h-14 object-contain" />
               <div>
                 <h1 className="text-2xl font-bold text-primary">Luster Dental Lab</h1>
                 <p className="text-sm text-muted-foreground">معمل لاستر لطب الأسنان</p>

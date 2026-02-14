@@ -37,7 +37,7 @@ export default function Login() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-4"
+      className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]"
       dir="rtl"
     >
       {/* Decorative background */}
@@ -50,9 +50,7 @@ export default function Login() {
       <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-teal-500 text-white text-3xl font-bold mb-4 shadow-2xl shadow-blue-500/25">
-            L
-          </div>
+          <img src="/logo1.png" alt="لاستر" className="inline-block w-24 h-24 object-contain mb-4 drop-shadow-2xl" />
           <h1 className="text-3xl font-bold text-white">Luster Dental Lab</h1>
           <p className="text-blue-200/70 mt-2 text-lg">نظام إدارة معمل لاستر لطب الأسنان</p>
         </div>

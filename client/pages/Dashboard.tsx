@@ -250,6 +250,28 @@ export default function Dashboard() {
                   </div>
                 </Link>
               )}
+              {(stats?.rushCases || 0) > 0 && (
+                <Link to="/cases" className="flex items-center gap-3 p-3 rounded-lg bg-orange-50 border border-orange-200 hover:bg-orange-100 transition-colors">
+                  <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-orange-800">
+                      {stats?.rushCases} حالات عاجلة في الانتظار
+                    </p>
+                    <p className="text-xs text-orange-600">مراجعة الحالات</p>
+                  </div>
+                </Link>
+              )}
+              {(stats?.overdueCases || 0) > 0 && (
+                <Link to="/cases" className="flex items-center gap-3 p-3 rounded-lg bg-red-50 border border-red-200 hover:bg-red-100 transition-colors">
+                  <AlertTriangle className="w-5 h-5 text-red-600 shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-red-800">
+                      {stats?.overdueCases} حالات تجاوزت موعد التسليم
+                    </p>
+                    <p className="text-xs text-red-600">مراجعة الحالات المتأخرة</p>
+                  </div>
+                </Link>
+              )}
               {(stats?.overduePayments || 0) > 0 && (
                 <Link to="/accounting" className="flex items-center gap-3 p-3 rounded-lg bg-red-50 border border-red-200 hover:bg-red-100 transition-colors">
                   <Calculator className="w-5 h-5 text-red-600 shrink-0" />

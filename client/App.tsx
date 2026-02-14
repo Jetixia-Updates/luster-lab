@@ -33,9 +33,7 @@ function ProtectedRoutes() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background" dir="rtl">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-teal-500 text-white text-2xl font-bold mb-4 shadow-xl animate-pulse">
-            L
-          </div>
+          <img src="/logo1.png" alt="لاستر" className="inline-block w-16 h-16 object-contain mb-4 animate-pulse" />
           <p className="text-muted-foreground">جاري التحميل...</p>
         </div>
       </div>
