@@ -6,7 +6,7 @@
  */
 
 import { RequestHandler } from "express";
-import { users, generateId } from "../data/store";
+import { users, generateId, persistUser } from "../data/store";
 import { generateToken } from "../middleware/auth";
 import { logAudit } from "../middleware/audit";
 import type { AuthLoginResponse, ApiResponse, User } from "@shared/api";
@@ -22,11 +22,12 @@ export const login: RequestHandler = (req, res) => {
   const token = generateToken(user.id);
   logAudit(user.id, user.fullNameAr, "LOGIN", "user", user.id, `User ${user.username} logged in`);
 
+  const { password: _p, ...safeUser } = user;
   const response: ApiResponse<AuthLoginResponse> = {
     success: true,
     data: {
       token,
-      user: { ...user, password: undefined },
+      user: safeUser,
     },
   };
   res.json(response);
@@ -65,6 +66,7 @@ export const createUser: RequestHandler = (req, res) => {
     updatedAt: new Date().toISOString(),
   };
   users.push(newUser);
+  persistUser(newUser);
 
   logAudit(currentUser.id, currentUser.fullNameAr, "CREATE_USER", "user", newUser.id, `Created user: ${newUser.fullNameAr} (${newUser.role})`);
   const { password: _, ...safe } = newUser;
@@ -79,6 +81,7 @@ export const updateUser: RequestHandler = (req, res) => {
   const { password, ...updates } = req.body;
   users[idx] = { ...users[idx], ...updates, updatedAt: new Date().toISOString() };
   if (password) users[idx].password = password;
+  persistUser(users[idx]);
 
   logAudit(currentUser.id, currentUser.fullNameAr, "UPDATE_USER", "user", users[idx].id, `Updated user: ${users[idx].fullNameAr}`);
   const { password: _, ...safe } = users[idx];
@@ -96,6 +99,7 @@ export const toggleUserActive: RequestHandler = (req, res) => {
 
   users[idx].active = !users[idx].active;
   users[idx].updatedAt = new Date().toISOString();
+  persistUser(users[idx]);
 
   const action = users[idx].active ? "تفعيل" : "تعطيل";
   logAudit(currentUser.id, currentUser.fullNameAr, "TOGGLE_USER", "user", users[idx].id, `${action} المستخدم: ${users[idx].fullNameAr}`);

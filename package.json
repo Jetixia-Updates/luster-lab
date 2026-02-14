@@ -5,22 +5,32 @@
   "version": "1.0.0",
   "description": "Luster Dental Lab ERP - Enterprise Resource Planning System",
   "pkg": {
-    "assets": ["dist/spa/*"],
-    "scripts": ["dist/server/**/*.js"]
+    "assets": [
+      "dist/spa/*"
+    ],
+    "scripts": [
+      "dist/server/**/*.js"
+    ]
   },
   "scripts": {
     "dev": "vite",
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build",
     "build:server": "vite build --config vite.config.server.ts",
+    "build:netlify": "vite build --config vite.config.netlify.ts",
     "start": "node dist/server/node-build.mjs",
     "test": "vitest --run",
     "format.fix": "prettier --write .",
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
+    "@netlify/functions": "^5.1.2",
+    "cors": "^2.8.6",
     "dotenv": "^17.2.1",
+    "drizzle-orm": "^0.45.1",
     "express": "^5.1.0",
+    "serverless-http": "^4.0.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
@@ -65,8 +75,8 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
-    "cors": "^2.8.5",
     "date-fns": "^4.1.0",
+    "drizzle-kit": "^0.31.9",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.23.12",
     "globals": "^16.3.0",
@@ -82,7 +92,6 @@
     "react-resizable-panels": "^3.0.4",
     "react-router-dom": "^6.30.1",
     "recharts": "^2.12.7",
-    "serverless-http": "^3.2.0",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
     "tailwindcss": "^3.4.17",

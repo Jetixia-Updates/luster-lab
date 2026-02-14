@@ -4,7 +4,20 @@
  */
 
 import { RequestHandler } from "express";
-import { suppliers, purchaseOrders, inventoryItems, invoices, cases, pricingRules, generateId, generatePONumber } from "../data/store";
+import {
+  suppliers,
+  purchaseOrders,
+  inventoryItems,
+  invoices,
+  cases,
+  pricingRules,
+  generateId,
+  generatePONumber,
+  persistSupplier,
+  removeSupplierFromDB,
+  persistPurchaseOrder,
+  persistAuditLog,
+} from "../data/store";
 import { logAudit } from "../middleware/audit";
 import type { Supplier, PurchaseOrder, SupplierPayment, CostAnalysis, MaterialProfitability } from "@shared/api";
 
@@ -51,7 +64,9 @@ export const createSupplier: RequestHandler = (req, res) => {
     updatedAt: new Date().toISOString(),
   };
   suppliers.push(sup);
-  logAudit(user.id, user.fullNameAr, "CREATE_SUPPLIER", "supplier", sup.id, `Added supplier: ${sup.nameAr}`);
+  persistSupplier(sup);
+  const log = logAudit(user.id, user.fullNameAr, "CREATE_SUPPLIER", "supplier", sup.id, `Added supplier: ${sup.nameAr}`);
+  persistAuditLog(log);
   res.status(201).json({ success: true, data: sup });
 };
 
@@ -61,7 +76,9 @@ export const updateSupplier: RequestHandler = (req, res) => {
   if (idx === -1) return res.status(404).json({ success: false, error: "Supplier not found" });
   const user = (req as any).user;
   suppliers[idx] = { ...suppliers[idx], ...req.body, updatedAt: new Date().toISOString() };
-  logAudit(user.id, user.fullNameAr, "UPDATE_SUPPLIER", "supplier", suppliers[idx].id, `Updated supplier: ${suppliers[idx].nameAr}`);
+  persistSupplier(suppliers[idx]);
+  const log = logAudit(user.id, user.fullNameAr, "UPDATE_SUPPLIER", "supplier", suppliers[idx].id, `Updated supplier: ${suppliers[idx].nameAr}`);
+  persistAuditLog(log);
   res.json({ success: true, data: suppliers[idx] });
 };
 
@@ -74,7 +91,9 @@ export const deleteSupplier: RequestHandler = (req, res) => {
   const linked = purchaseOrders.filter((po) => po.supplierId === suppliers[idx].id && po.status !== "cancelled");
   if (linked.length > 0) return res.status(400).json({ success: false, error: `Cannot delete: ${linked.length} active purchase orders linked` });
   const removed = suppliers.splice(idx, 1)[0];
-  logAudit(user.id, user.fullNameAr, "DELETE_SUPPLIER", "supplier", removed.id, `Deleted supplier: ${removed.nameAr}`);
+  removeSupplierFromDB(removed.id);
+  const log = logAudit(user.id, user.fullNameAr, "DELETE_SUPPLIER", "supplier", removed.id, `Deleted supplier: ${removed.nameAr}`);
+  persistAuditLog(log);
   res.json({ success: true, message: "Supplier deleted" });
 };
 
@@ -137,12 +156,15 @@ export const createPurchaseOrder: RequestHandler = (req, res) => {
   };
 
   purchaseOrders.unshift(po);
+  persistPurchaseOrder(po);
   sup.totalPurchases += totalAmount;
   sup.balance += totalAmount;
   sup.updatedAt = new Date().toISOString();
+  persistSupplier(sup);
 
-  logAudit(user.id, user.fullNameAr, "CREATE_PO", "purchase_order", po.id,
+  const log = logAudit(user.id, user.fullNameAr, "CREATE_PO", "purchase_order", po.id,
     `Created PO ${po.poNumber} for ${sup.nameAr} - Amount: ${totalAmount}`);
+  persistAuditLog(log);
 
   res.status(201).json({ success: true, data: po });
 };
@@ -157,9 +179,11 @@ export const updatePOStatus: RequestHandler = (req, res) => {
   po.status = status;
   if (status === "received") po.receivedDate = new Date().toISOString();
   po.updatedAt = new Date().toISOString();
+  persistPurchaseOrder(po);
 
-  logAudit(user.id, user.fullNameAr, "UPDATE_PO_STATUS", "purchase_order", po.id,
+  const log = logAudit(user.id, user.fullNameAr, "UPDATE_PO_STATUS", "purchase_order", po.id,
     `Updated PO ${po.poNumber} status to ${status}`);
+  persistAuditLog(log);
 
   res.json({ success: true, data: po });
 };
@@ -188,6 +212,7 @@ export const recordPOPayment: RequestHandler = (req, res) => {
   po.paidAmount += amount;
   po.remainingAmount -= amount;
   po.updatedAt = new Date().toISOString();
+  persistPurchaseOrder(po);
 
   // Update supplier balance
   const sup = suppliers.find((s) => s.id === po.supplierId);
@@ -195,10 +220,12 @@ export const recordPOPayment: RequestHandler = (req, res) => {
     sup.totalPaid += amount;
     sup.balance -= amount;
     sup.updatedAt = new Date().toISOString();
+    persistSupplier(sup);
   }
 
-  logAudit(user.id, user.fullNameAr, "PO_PAYMENT", "purchase_order", po.id,
+  const log = logAudit(user.id, user.fullNameAr, "PO_PAYMENT", "purchase_order", po.id,
     `Recorded payment ${amount} for PO ${po.poNumber}`);
+  persistAuditLog(log);
 
   res.json({ success: true, data: po });
 };

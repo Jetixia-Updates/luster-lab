@@ -4,7 +4,22 @@
  */
 
 import { RequestHandler } from "express";
-import { invoices, cases, pricingRules, doctors, expenses, generateId, generateInvoiceNumber } from "../data/store";
+import {
+  invoices,
+  cases,
+  pricingRules,
+  doctors,
+  expenses,
+  generateId,
+  generateInvoiceNumber,
+  persistInvoice,
+  persistCase,
+  persistDoctor,
+  persistExpense,
+  removeExpenseFromDB,
+  persistPricingRule,
+  persistAuditLog,
+} from "../data/store";
 import { logAudit } from "../middleware/audit";
 import type { Invoice, Payment, Expense, ApiResponse, PricingRule, FinancialSummary, AgingBucket, PaymentSummary, DoctorStatement } from "@shared/api";
 
@@ -172,14 +187,19 @@ export const createInvoice: RequestHandler = (req, res) => {
   };
 
   invoices.unshift(invoice);
+  persistInvoice(invoice);
   dentalCase.invoiceId = invoice.id;
   dentalCase.totalCost = totalAmount;
+  persistCase(dentalCase);
 
   // Update doctor debt
-  if (doctor) doctor.totalDebt += totalAmount;
+  if (doctor) {
+    doctor.totalDebt += totalAmount;
+    persistDoctor(doctor);
+  }
 
-  logAudit(user.id, user.fullNameAr, "CREATE_INVOICE", "invoice", invoice.id,
-    `Created invoice ${invoiceNumber} for case ${dentalCase.caseNumber} - Amount: ${totalAmount}`);
+  persistAuditLog(logAudit(user.id, user.fullNameAr, "CREATE_INVOICE", "invoice", invoice.id,
+    `Created invoice ${invoiceNumber} for case ${dentalCase.caseNumber} - Amount: ${totalAmount}`));
 
   res.status(201).json({ success: true, data: invoice });
 };
@@ -215,13 +235,17 @@ export const recordPayment: RequestHandler = (req, res) => {
   inv.remainingAmount = inv.totalAmount - inv.paidAmount;
   inv.paymentStatus = inv.remainingAmount <= 0 ? "paid" : "partial";
   if (inv.paymentStatus === "paid") inv.status = "paid";
+  persistInvoice(inv);
 
   // Update doctor debt
   const doctor = doctors.find((d) => d.id === inv.doctorId);
-  if (doctor) doctor.totalDebt = Math.max(0, doctor.totalDebt - amount);
+  if (doctor) {
+    doctor.totalDebt = Math.max(0, doctor.totalDebt - amount);
+    persistDoctor(doctor);
+  }
 
-  logAudit(user.id, user.fullNameAr, "RECORD_PAYMENT", "invoice", inv.id,
-    `Recorded payment ${amount} for invoice ${inv.invoiceNumber}`);
+  persistAuditLog(logAudit(user.id, user.fullNameAr, "RECORD_PAYMENT", "invoice", inv.id,
+    `Recorded payment ${amount} for invoice ${inv.invoiceNumber}`));
 
   res.json({ success: true, data: inv });
 };
@@ -237,6 +261,7 @@ export const updatePricingRule: RequestHandler = (req, res) => {
   if (idx === -1) return res.status(404).json({ success: false, error: "Pricing rule not found" });
 
   pricingRules[idx] = { ...pricingRules[idx], ...req.body, updatedAt: new Date().toISOString() };
+  persistPricingRule(pricingRules[idx]);
   res.json({ success: true, data: pricingRules[idx] });
 };
 
@@ -252,20 +277,25 @@ export const cancelInvoice: RequestHandler = (req, res) => {
   const user = (req as any).user;
   inv.status = "cancelled";
   inv.paymentStatus = "unpaid";
+  persistInvoice(inv);
 
   // Remove invoice reference from case
   const dentalCase = cases.find((c) => c.id === inv.caseId);
   if (dentalCase) {
     dentalCase.invoiceId = undefined;
     dentalCase.totalCost = 0;
+    persistCase(dentalCase);
   }
 
   // Reduce doctor debt
   const doctor = doctors.find((d) => d.id === inv.doctorId);
-  if (doctor) doctor.totalDebt = Math.max(0, doctor.totalDebt - inv.totalAmount);
+  if (doctor) {
+    doctor.totalDebt = Math.max(0, doctor.totalDebt - inv.totalAmount);
+    persistDoctor(doctor);
+  }
 
-  logAudit(user.id, user.fullNameAr, "CANCEL_INVOICE", "invoice", inv.id,
-    `Cancelled invoice ${inv.invoiceNumber}`);
+  persistAuditLog(logAudit(user.id, user.fullNameAr, "CANCEL_INVOICE", "invoice", inv.id,
+    `Cancelled invoice ${inv.invoiceNumber}`));
 
   res.json({ success: true, data: inv });
 };
@@ -303,8 +333,9 @@ export const createExpense: RequestHandler = (req, res) => {
     createdAt: new Date().toISOString(),
   };
   expenses.unshift(expense);
-  logAudit(user.id, user.fullNameAr, "CREATE_EXPENSE", "expense", expense.id,
-    `Created expense: ${expense.description} - ${expense.amount} EGP`);
+  persistExpense(expense);
+  persistAuditLog(logAudit(user.id, user.fullNameAr, "CREATE_EXPENSE", "expense", expense.id,
+    `Created expense: ${expense.description} - ${expense.amount} EGP`));
   res.status(201).json({ success: true, data: expense });
 };
 
@@ -314,8 +345,9 @@ export const updateExpense: RequestHandler = (req, res) => {
   if (idx === -1) return res.status(404).json({ success: false, error: "Expense not found" });
   const user = (req as any).user;
   expenses[idx] = { ...expenses[idx], ...req.body };
-  logAudit(user.id, user.fullNameAr, "UPDATE_EXPENSE", "expense", expenses[idx].id,
-    `Updated expense: ${expenses[idx].description}`);
+  persistExpense(expenses[idx]);
+  persistAuditLog(logAudit(user.id, user.fullNameAr, "UPDATE_EXPENSE", "expense", expenses[idx].id,
+    `Updated expense: ${expenses[idx].description}`));
   res.json({ success: true, data: expenses[idx] });
 };
 
@@ -325,8 +357,9 @@ export const deleteExpense: RequestHandler = (req, res) => {
   if (idx === -1) return res.status(404).json({ success: false, error: "Expense not found" });
   const user = (req as any).user;
   const removed = expenses.splice(idx, 1)[0];
-  logAudit(user.id, user.fullNameAr, "DELETE_EXPENSE", "expense", removed.id,
-    `Deleted expense: ${removed.description}`);
+  removeExpenseFromDB(removed.id);
+  persistAuditLog(logAudit(user.id, user.fullNameAr, "DELETE_EXPENSE", "expense", removed.id,
+    `Deleted expense: ${removed.description}`));
   res.json({ success: true, message: "Expense deleted" });
 };
 

@@ -4,7 +4,16 @@
  */
 
 import { RequestHandler } from "express";
-import { cases, doctors, generateId, generateCaseNumber } from "../data/store";
+import {
+  cases,
+  doctors,
+  generateId,
+  generateCaseNumber,
+  persistCase,
+  persistDoctor,
+  persistAuditLog,
+  removeCaseFromDB,
+} from "../data/store";
 import { logAudit } from "../middleware/audit";
 import type {
   DentalCase, CaseStatus, ApiResponse, CreateCaseRequest,
@@ -119,12 +128,17 @@ export const createCase: RequestHandler = (req, res) => {
   };
 
   cases.unshift(newCase);
+  persistCase(newCase);
 
   // Update doctor case count
-  if (doctor) doctor.totalCases++;
+  if (doctor) {
+    doctor.totalCases++;
+    persistDoctor(doctor);
+  }
 
-  logAudit(user.id, user.fullNameAr, "CREATE_CASE", "case", newCase.id,
+  const auditLog = logAudit(user.id, user.fullNameAr, "CREATE_CASE", "case", newCase.id,
     `Created case ${caseNumber} for ${newCase.patientName}`);
+  persistAuditLog(auditLog);
 
   res.status(201).json({ success: true, data: newCase });
 };
@@ -136,9 +150,11 @@ export const updateCase: RequestHandler = (req, res) => {
 
   const user = (req as any).user;
   cases[idx] = { ...cases[idx], ...req.body, updatedAt: new Date().toISOString() };
+  persistCase(cases[idx]);
 
-  logAudit(user.id, user.fullNameAr, "UPDATE_CASE", "case", cases[idx].id,
+  const auditLog = logAudit(user.id, user.fullNameAr, "UPDATE_CASE", "case", cases[idx].id,
     `Updated case ${cases[idx].caseNumber}`);
+  persistAuditLog(auditLog);
 
   res.json({ success: true, data: cases[idx] });
 };
@@ -188,9 +204,11 @@ export const transferCase: RequestHandler = (req, res) => {
   c.currentStatus = toStatus;
   c.currentDepartment = STATUS_DEPARTMENT_MAP[toStatus];
   c.updatedAt = new Date().toISOString();
+  persistCase(c);
 
-  logAudit(user.id, user.fullNameAr, "TRANSFER_CASE", "case", c.id,
+  const auditLog = logAudit(user.id, user.fullNameAr, "TRANSFER_CASE", "case", c.id,
     `Transferred case ${c.caseNumber} from ${step.fromStatus} to ${toStatus}`);
+  persistAuditLog(auditLog);
 
   res.json({ success: true, data: c });
 };
@@ -202,6 +220,7 @@ export const updateCADData: RequestHandler = (req, res) => {
   
   c.cadData = { ...c.cadData, ...req.body };
   c.updatedAt = new Date().toISOString();
+  persistCase(c);
   res.json({ success: true, data: c });
 };
 
@@ -212,6 +231,7 @@ export const updateCAMData: RequestHandler = (req, res) => {
 
   c.camData = { ...c.camData, ...req.body };
   c.updatedAt = new Date().toISOString();
+  persistCase(c);
   res.json({ success: true, data: c });
 };
 
@@ -222,6 +242,7 @@ export const updateFinishingData: RequestHandler = (req, res) => {
 
   c.finishingData = { ...c.finishingData, ...req.body };
   c.updatedAt = new Date().toISOString();
+  persistCase(c);
   res.json({ success: true, data: c });
 };
 
@@ -238,9 +259,11 @@ export const updateQCData: RequestHandler = (req, res) => {
     inspectionDate: new Date().toISOString(),
   };
   c.updatedAt = new Date().toISOString();
+  persistCase(c);
 
-  logAudit(user.id, user.fullNameAr, "QC_INSPECTION", "case", c.id,
+  const auditLog = logAudit(user.id, user.fullNameAr, "QC_INSPECTION", "case", c.id,
     `QC ${req.body.overallResult} for case ${c.caseNumber}`);
+  persistAuditLog(auditLog);
 
   res.json({ success: true, data: c });
 };
@@ -252,8 +275,11 @@ export const deleteCase: RequestHandler = (req, res) => {
   
   const user = (req as any).user;
   const removed = cases.splice(idx, 1)[0];
-  logAudit(user.id, user.fullNameAr, "DELETE_CASE", "case", removed.id,
+  removeCaseFromDB(removed.id);
+
+  const auditLog = logAudit(user.id, user.fullNameAr, "DELETE_CASE", "case", removed.id,
     `Deleted case ${removed.caseNumber}`);
-  
+  persistAuditLog(auditLog);
+
   res.json({ success: true, message: "Case deleted" });
 };

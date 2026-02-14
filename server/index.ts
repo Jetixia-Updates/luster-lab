@@ -9,6 +9,9 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 
+// Database initialization
+import { initializeStore } from "./data/store";
+
 // Middleware
 import { authenticate } from "./middleware/auth";
 import { errorHandler } from "./middleware/errorHandler";
@@ -45,6 +48,8 @@ import {
   getPurchaseOrders, getPurchaseOrder, createPurchaseOrder, updatePOStatus, recordPOPayment,
   getCostAnalysis, getMaterialProfitability, getPurchaseVsSales, getSupplierBalances,
 } from "./routes/suppliers";
+
+export { initializeStore };
 
 export function createServer() {
   const app = express();

@@ -4,7 +4,15 @@
  */
 
 import { RequestHandler } from "express";
-import { inventoryItems, inventoryTransactions, generateId } from "../data/store";
+import {
+  inventoryItems,
+  inventoryTransactions,
+  generateId,
+  persistInventoryItem,
+  removeInventoryItemFromDB,
+  persistInventoryTransaction,
+  persistAuditLog,
+} from "../data/store";
 import { logAudit } from "../middleware/audit";
 import type { InventoryItem, InventoryTransaction, ApiResponse } from "@shared/api";
 
@@ -47,7 +55,9 @@ export const createInventoryItem: RequestHandler = (req, res) => {
     updatedAt: new Date().toISOString(),
   };
   inventoryItems.push(item);
-  logAudit(user.id, user.fullNameAr, "CREATE_INVENTORY", "inventory", item.id, `Added item: ${item.nameAr}`);
+  persistInventoryItem(item);
+  const auditLog = logAudit(user.id, user.fullNameAr, "CREATE_INVENTORY", "inventory", item.id, `Added item: ${item.nameAr}`);
+  persistAuditLog(auditLog);
   res.status(201).json({ success: true, data: item });
 };
 
@@ -58,7 +68,9 @@ export const updateInventoryItem: RequestHandler = (req, res) => {
 
   const user = (req as any).user;
   inventoryItems[idx] = { ...inventoryItems[idx], ...req.body, updatedAt: new Date().toISOString() };
-  logAudit(user.id, user.fullNameAr, "UPDATE_INVENTORY", "inventory", inventoryItems[idx].id, `Updated item: ${inventoryItems[idx].nameAr}`);
+  persistInventoryItem(inventoryItems[idx]);
+  const auditLog = logAudit(user.id, user.fullNameAr, "UPDATE_INVENTORY", "inventory", inventoryItems[idx].id, `Updated item: ${inventoryItems[idx].nameAr}`);
+  persistAuditLog(auditLog);
   res.json({ success: true, data: inventoryItems[idx] });
 };
 
@@ -94,9 +106,11 @@ export const deductStock: RequestHandler = (req, res) => {
     createdAt: new Date().toISOString(),
   };
   inventoryTransactions.unshift(tx);
-
-  logAudit(user.id, user.fullNameAr, "DEDUCT_STOCK", "inventory", item.id,
+  persistInventoryItem(item);
+  persistInventoryTransaction(tx);
+  const auditLog = logAudit(user.id, user.fullNameAr, "DEDUCT_STOCK", "inventory", item.id,
     `Deducted ${quantity} ${item.unit} of ${item.nameAr} for case ${caseNumber}`);
+  persistAuditLog(auditLog);
 
   // Check low stock alert
   const lowStockAlert = item.currentStock <= item.minimumStock;
@@ -131,9 +145,11 @@ export const restockItem: RequestHandler = (req, res) => {
     createdAt: new Date().toISOString(),
   };
   inventoryTransactions.unshift(tx);
-
-  logAudit(user.id, user.fullNameAr, "RESTOCK", "inventory", item.id,
+  persistInventoryItem(item);
+  persistInventoryTransaction(tx);
+  const auditLog = logAudit(user.id, user.fullNameAr, "RESTOCK", "inventory", item.id,
     `Restocked ${quantity} ${item.unit} of ${item.nameAr}`);
+  persistAuditLog(auditLog);
 
   res.json({ success: true, data: { item, transaction: tx } });
 };
@@ -145,7 +161,9 @@ export const deleteInventoryItem: RequestHandler = (req, res) => {
   
   const user = (req as any).user;
   const removed = inventoryItems.splice(idx, 1)[0];
-  logAudit(user.id, user.fullNameAr, "DELETE_INVENTORY", "inventory", removed.id, `Deleted item: ${removed.nameAr}`);
+  removeInventoryItemFromDB(removed.id);
+  const auditLog = logAudit(user.id, user.fullNameAr, "DELETE_INVENTORY", "inventory", removed.id, `Deleted item: ${removed.nameAr}`);
+  persistAuditLog(auditLog);
   res.json({ success: true, message: "Item deleted" });
 };
 

@@ -3,7 +3,7 @@
  */
 
 import { RequestHandler } from "express";
-import { doctors, patients, cases, generateId } from "../data/store";
+import { doctors, patients, cases, generateId, persistDoctor, persistPatient, removeDoctorFromDB } from "../data/store";
 import { logAudit } from "../middleware/audit";
 import type { Doctor, Patient, ApiResponse } from "@shared/api";
 
@@ -27,6 +27,7 @@ export const createDoctor: RequestHandler = (req, res) => {
     createdAt: new Date().toISOString(),
   };
   doctors.push(doc);
+  persistDoctor(doc);
   logAudit(user.id, user.fullNameAr, "CREATE_DOCTOR", "doctor", doc.id, `Created doctor: ${doc.nameAr}`);
   res.status(201).json({ success: true, data: doc });
 };
@@ -37,6 +38,7 @@ export const updateDoctor: RequestHandler = (req, res) => {
   
   const user = (req as any).user;
   doctors[idx] = { ...doctors[idx], ...req.body };
+  persistDoctor(doctors[idx]);
   logAudit(user.id, user.fullNameAr, "UPDATE_DOCTOR", "doctor", doctors[idx].id, `Updated doctor: ${doctors[idx].nameAr}`);
   res.json({ success: true, data: doctors[idx] });
 };
@@ -53,6 +55,7 @@ export const deleteDoctor: RequestHandler = (req, res) => {
 
   const user = (req as any).user;
   const removed = doctors.splice(idx, 1)[0];
+  removeDoctorFromDB(removed.id);
   logAudit(user.id, user.fullNameAr, "DELETE_DOCTOR", "doctor", removed.id, `Deleted doctor: ${removed.nameAr}`);
   res.json({ success: true, message: "Doctor deleted" });
 };
@@ -76,6 +79,7 @@ export const createPatient: RequestHandler = (req, res) => {
     ...req.body,
   };
   patients.push(patient);
+  persistPatient(patient);
   logAudit(user.id, user.fullNameAr, "CREATE_PATIENT", "patient", patient.id, `Created patient: ${patient.nameAr}`);
   res.status(201).json({ success: true, data: patient });
 };
@@ -84,5 +88,6 @@ export const updatePatient: RequestHandler = (req, res) => {
   const idx = patients.findIndex((p) => p.id === req.params.id);
   if (idx === -1) return res.status(404).json({ success: false, error: "Patient not found" });
   patients[idx] = { ...patients[idx], ...req.body };
+  persistPatient(patients[idx]);
   res.json({ success: true, data: patients[idx] });
 };

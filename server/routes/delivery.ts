@@ -3,7 +3,7 @@
  */
 
 import { RequestHandler } from "express";
-import { deliveries, cases, generateId } from "../data/store";
+import { deliveries, cases, generateId, persistDelivery, persistCase, persistAuditLog } from "../data/store";
 import { logAudit } from "../middleware/audit";
 import type { Delivery } from "@shared/api";
 
@@ -43,12 +43,16 @@ export const createDelivery: RequestHandler = (req, res) => {
   };
 
   deliveries.unshift(delivery);
+  persistDelivery(delivery);
+
   dentalCase.currentStatus = "delivered";
   dentalCase.actualDeliveryDate = delivery.deliveryDate;
   dentalCase.updatedAt = new Date().toISOString();
+  persistCase(dentalCase);
 
-  logAudit(user.id, user.fullNameAr, "DELIVER_CASE", "delivery", delivery.id,
+  const log = logAudit(user.id, user.fullNameAr, "DELIVER_CASE", "delivery", delivery.id,
     `Delivered case ${dentalCase.caseNumber} to ${dentalCase.doctorName}`);
+  persistAuditLog(log);
 
   res.status(201).json({ success: true, data: delivery });
 };
