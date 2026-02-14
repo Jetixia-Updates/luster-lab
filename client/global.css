@@ -1,0 +1,108 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 213 94% 30%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 174 62% 47%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 20% 96%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 22% 91%;
+    --input: 214 22% 91%;
+    --ring: 213 94% 30%;
+    --radius: 0.625rem;
+
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 210 20% 96%;
+    --sidebar-primary: 213 94% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 47% 18%;
+    --sidebar-accent-foreground: 210 20% 96%;
+    --sidebar-border: 222 47% 18%;
+    --sidebar-ring: 213 94% 55%;
+  }
+
+  .dark {
+    --background: 222 47% 6%;
+    --foreground: 210 20% 96%;
+    --card: 222 47% 9%;
+    --card-foreground: 210 20% 96%;
+    --popover: 222 47% 9%;
+    --popover-foreground: 210 20% 96%;
+    --primary: 213 94% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 174 62% 47%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 222 47% 14%;
+    --muted-foreground: 215 16% 60%;
+    --accent: 222 47% 14%;
+    --accent-foreground: 210 20% 96%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 222 47% 18%;
+    --input: 222 47% 18%;
+    --ring: 213 94% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Cairo', 'Inter', sans-serif;
+  }
+  [dir="rtl"] body {
+    font-family: 'Cairo', 'Inter', sans-serif;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
+
+/* Status Badge Colors */
+.status-reception { @apply bg-blue-100 text-blue-800; }
+.status-cad_design { @apply bg-purple-100 text-purple-800; }
+.status-cam_milling { @apply bg-orange-100 text-orange-800; }
+.status-finishing { @apply bg-yellow-100 text-yellow-800; }
+.status-quality_control { @apply bg-cyan-100 text-cyan-800; }
+.status-accounting { @apply bg-green-100 text-green-800; }
+.status-ready_for_delivery { @apply bg-emerald-100 text-emerald-800; }
+.status-delivered { @apply bg-green-200 text-green-900; }
+.status-returned { @apply bg-red-100 text-red-800; }
+.status-cancelled { @apply bg-gray-100 text-gray-800; }
+
+/* Priority Colors */
+.priority-normal { @apply bg-gray-100 text-gray-700; }
+.priority-urgent { @apply bg-amber-100 text-amber-800; }
+.priority-rush { @apply bg-red-100 text-red-800; }
+
+/* Print styles */
+@media print {
+  .no-print, [class*="TabsList"], nav, .sidebar, header, button { display: none !important; }
+  .sidebar { display: none !important; }
+  body { background: white !important; }
+  .print-show { display: block !important; }
+  * { break-inside: avoid; }
+  table { page-break-inside: auto; }
+  tr { page-break-inside: avoid; }
+}
