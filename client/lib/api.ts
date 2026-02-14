@@ -29,15 +29,30 @@ async function request<T>(
     headers["Authorization"] = `Bearer ${authToken}`;
   }
 
-  const res = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      headers,
+    });
+  } catch (err: any) {
+    // Failed to fetch = network error (server unreachable, CORS, etc.)
+    const msg = err?.message || String(err);
+    if (msg.includes("fetch") || msg.includes("NetworkError") || msg.includes("Failed")) {
+      throw new Error("فشل الاتصال بالخادم. تأكد من تشغيل التطبيق بـ: pnpm dev");
+    }
+    throw err;
+  }
 
-  const data = await res.json();
+  let data: any;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error(`استجابة غير صحيحة من الخادم (${res.status})`);
+  }
 
   if (!res.ok) {
-    throw new Error(data.error || `API Error: ${res.status}`);
+    throw new Error(data.error || `خطأ: ${res.status}`);
   }
 
   return data;

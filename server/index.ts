@@ -46,6 +46,7 @@ import {
 import {
   getSuppliers, getSupplier, createSupplier, updateSupplier, deleteSupplier,
   getPurchaseOrders, getPurchaseOrder, createPurchaseOrder, updatePOStatus, recordPOPayment,
+  createExpenseFromPO,
   getCostAnalysis, getMaterialProfitability, getPurchaseVsSales, getSupplierBalances,
 } from "./routes/suppliers";
 
@@ -160,6 +161,7 @@ export function createServer() {
   app.post("/api/purchase-orders", createPurchaseOrder);
   app.put("/api/purchase-orders/:id/status", updatePOStatus);
   app.post("/api/purchase-orders/:id/payment", recordPOPayment);
+  app.post("/api/purchase-orders/:id/create-expense", createExpenseFromPO);
 
   // ── Cost & Profit Analytics ───────────────────────
   app.get("/api/analytics/cost-analysis", getCostAnalysis);

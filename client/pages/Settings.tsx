@@ -11,13 +11,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
   Settings as SettingsIcon, DollarSign, Save, Info, Building2,
-  Bell, Shield, Palette, Edit, Check, X, Plus,
+  Bell, Shield, Palette, Edit, Check, X, Plus, Cpu, Monitor,
 } from "lucide-react";
+import { CAD_SOFTWARES } from "@shared/cadSoftwareIntegration";
 import type { PricingRule } from "@shared/api";
 
 // Stored locally since no real backend persistence for lab settings
@@ -54,6 +56,15 @@ export default function Settings() {
   });
   const [editingLab, setEditingLab] = useState(false);
   const [labDraft, setLabDraft] = useState({ ...labInfo });
+
+  // CAD/CAM default software
+  const [defaultCadSoftware, setDefaultCadSoftware] = useState(() => {
+    try {
+      return localStorage.getItem("luster_default_cad_software") || "exocad";
+    } catch {
+      return "exocad";
+    }
+  });
 
   // Notification prefs
   const [notifPrefs, setNotifPrefs] = useState(() => {
@@ -115,7 +126,7 @@ export default function Settings() {
       </div>
 
       <Tabs defaultValue="pricing" dir="rtl">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="pricing" className="gap-2 text-xs sm:text-sm">
             <DollarSign className="w-4 h-4" />
             قواعد التسعير
@@ -123,6 +134,10 @@ export default function Settings() {
           <TabsTrigger value="lab" className="gap-2 text-xs sm:text-sm">
             <Building2 className="w-4 h-4" />
             بيانات المعمل
+          </TabsTrigger>
+          <TabsTrigger value="cad" className="gap-2 text-xs sm:text-sm">
+            <Cpu className="w-4 h-4" />
+            برامج CAD/CAM
           </TabsTrigger>
           <TabsTrigger value="notifications" className="gap-2 text-xs sm:text-sm">
             <Bell className="w-4 h-4" />
@@ -362,6 +377,64 @@ export default function Settings() {
                 <div className="p-3 rounded-lg bg-accent/50">
                   <p className="text-muted-foreground">المصادقة</p>
                   <p className="font-bold">JWT + RBAC</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ═══ CAD/CAM Software Tab ═══ */}
+        <TabsContent value="cad" className="mt-4 space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Monitor className="w-5 h-5" />
+                برامج التصميم والتفريز CAD/CAM
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                اختر البرنامج الافتراضي وصدّر الملفات لفتحها في البرنامج المثبت
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label>البرنامج الافتراضي للتصميم</Label>
+                <Select
+                  value={defaultCadSoftware}
+                  onValueChange={(v) => {
+                    setDefaultCadSoftware(v);
+                    localStorage.setItem("luster_default_cad_software", v);
+                    toast.success("تم حفظ الإعداد");
+                  }}
+                >
+                  <SelectTrigger className="max-w-md">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CAD_SOFTWARES.map((sw) => (
+                      <SelectItem key={sw.id} value={sw.id}>
+                        <span className="flex items-center gap-2">{sw.icon} {sw.name} ({sw.nameAr})</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-2">
+                  عند الضغط على "تصدير" في قسم التصميم، ستُحمَّل ملفات JSON و STL. افتحها في البرنامج المحدد.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t">
+                <p className="text-sm font-medium mb-2">البرامج المتكاملة:</p>
+                <div className="grid gap-2">
+                  {CAD_SOFTWARES.filter((s) => s.id !== "other").map((sw) => (
+                    <div key={sw.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                      <span className="text-xl">{sw.icon}</span>
+                      <div>
+                        <p className="font-medium">{sw.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          تنسيقات: {sw.extensions.join(", ")} • مجلد التصدير: {sw.exportFolder || "-"}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </CardContent>

@@ -313,6 +313,15 @@ export default function Accounting() {
     } catch (err: any) { toast.error(err.message); }
   };
 
+  const createExpenseFromPO = async (poId: string) => {
+    try {
+      await api.post<any>(`/purchase-orders/${poId}/create-expense`, {});
+      toast.success("تم تسجيل أمر الشراء كمصروف");
+      loadAll();
+      setSelectedPO(null);
+    } catch (err: any) { toast.error(err?.response?.data?.error || err.message); }
+  };
+
   // ── Expense Actions ──
   const openExpenseCreate = () => {
     setExpForm({ category: "materials", description: "", amount: 0, date: new Date().toISOString().split("T")[0], vendor: "", reference: "", notes: "" });
@@ -765,6 +774,10 @@ export default function Accounting() {
 
         {/* ═══ TAB 5: Expenses ═══ */}
         <TabsContent value="expenses" className="space-y-4">
+          <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-800 flex items-center gap-2">
+            <Receipt className="w-4 h-4 flex-shrink-0" />
+            <span>أوامر الشراء المستلمة تُسجّل تلقائياً كمصروفات. يمكنك أيضاً إضافة مصروفات يدوية من الزر أدناه.</span>
+          </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-base px-3 py-1">إجمالي: {totalExpensesAmount.toLocaleString()} ج.م</Badge>
@@ -787,16 +800,34 @@ export default function Accounting() {
               {expenses.map((exp) => (
                 <tr key={exp.id} className="border-b hover:bg-accent/30">
                   <td className="py-3 px-2 text-muted-foreground text-xs">{new Date(exp.date).toLocaleDateString("ar-EG")}</td>
-                  <td className="py-3 px-2"><Badge variant="outline" className="text-[10px]">{EXPENSE_CATEGORIES[exp.category]}</Badge></td>
+                  <td className="py-3 px-2">
+                    <div className="flex items-center gap-1">
+                      <Badge variant="outline" className="text-[10px]">{EXPENSE_CATEGORIES[exp.category]}</Badge>
+                      {(exp as any).source === "purchase_order" && (
+                        <Badge variant="secondary" className="text-[9px] gap-0.5 bg-indigo-100 text-indigo-800">
+                          <ShoppingCart className="w-3 h-3" /> أمر شراء
+                        </Badge>
+                      )}
+                    </div>
+                  </td>
                   <td className="py-3 px-2">{exp.description}</td>
                   <td className="py-3 px-2 font-bold text-red-600">{exp.amount.toLocaleString()}</td>
                   <td className="py-3 px-2 text-muted-foreground text-xs">{exp.vendor || "-"}</td>
                   <td className="py-3 px-2 text-muted-foreground text-xs font-mono">{exp.reference || "-"}</td>
                   <td className="py-3 px-2 text-muted-foreground text-xs">{exp.createdByName}</td>
-                  <td className="py-3 px-2 text-center"><div className="flex gap-1 justify-center">
-                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openExpenseEdit(exp)}><Edit className="w-3 h-3" /></Button>
-                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-500" onClick={() => deleteExpense(exp.id)}><Trash2 className="w-3 h-3" /></Button>
-                  </div></td>
+                  <td className="py-3 px-2 text-center">
+                    <div className="flex gap-1 justify-center">
+                      {(exp as any).source !== "purchase_order" && (
+                        <>
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openExpenseEdit(exp)}><Edit className="w-3 h-3" /></Button>
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-500" onClick={() => deleteExpense(exp.id)}><Trash2 className="w-3 h-3" /></Button>
+                        </>
+                      )}
+                      {(exp as any).source === "purchase_order" && (
+                        <span className="text-[10px] text-muted-foreground">مرتبط بأمر شراء</span>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody></table>
@@ -1181,9 +1212,14 @@ export default function Accounting() {
                     ))}</div>
                   )}</CardContent>
                 </Card>
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-2 flex-wrap">
                   {selectedPO.status === "draft" && <Button variant="outline" className="gap-1" onClick={() => { setSelectedPO(null); updatePOStatus(selectedPO.id, "sent"); }}><Send className="w-4 h-4" /> إرسال</Button>}
                   {selectedPO.status === "sent" && <Button variant="outline" className="gap-1 text-green-700" onClick={() => { setSelectedPO(null); updatePOStatus(selectedPO.id, "received"); }}><CheckCircle className="w-4 h-4" /> تأكيد الاستلام</Button>}
+                  {selectedPO.status === "received" && !expenses.some((e: any) => e.purchaseOrderId === selectedPO.id) && (
+                    <Button variant="outline" className="gap-1 text-amber-700 border-amber-300" onClick={() => createExpenseFromPO(selectedPO.id)}>
+                      <Receipt className="w-4 h-4" /> تسجيل كمصروف
+                    </Button>
+                  )}
                   {selectedPO.remainingAmount > 0 && selectedPO.status !== "cancelled" && (
                     <Button className="gap-1 bg-green-600 hover:bg-green-700" onClick={() => { setSelectedPO(null); openPayDialog("po", selectedPO.id, selectedPO.remainingAmount, selectedPO.poNumber); }}><CreditCard className="w-4 h-4" /> تسجيل دفعة</Button>
                   )}

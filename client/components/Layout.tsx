@@ -3,7 +3,7 @@
  */
 
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROLE_LABELS } from "@/lib/constants";
@@ -24,6 +24,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 import type { UserRole } from "@shared/api";
 
@@ -82,7 +83,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notifications, setNotifications] = useStateLocal<Notification[]>([]);
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    toast.success("تم تسجيل الخروج بنجاح");
+    navigate("/", { replace: true });
+  };
 
   // Fetch notifications (low stock alerts, overdue cases, etc.)
   useEffect(() => {
@@ -314,7 +322,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout} className="gap-2 text-red-600 cursor-pointer">
+                <DropdownMenuItem onClick={handleLogout} className="gap-2 text-red-600 cursor-pointer">
                   <LogOut className="w-4 h-4" /> تسجيل الخروج
                 </DropdownMenuItem>
               </DropdownMenuContent>

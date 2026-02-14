@@ -17,10 +17,11 @@ import {
   persistSupplier,
   removeSupplierFromDB,
   persistPurchaseOrder,
+  persistExpense,
   persistAuditLog,
 } from "../data/store";
 import { logAudit } from "../middleware/audit";
-import type { Supplier, PurchaseOrder, SupplierPayment, CostAnalysis, MaterialProfitability } from "@shared/api";
+import type { Supplier, PurchaseOrder, SupplierPayment, CostAnalysis, MaterialProfitability, Expense } from "@shared/api";
 
 // ══════════════════════════════════════════
 // SUPPLIERS CRUD
@@ -176,11 +177,38 @@ export const updatePOStatus: RequestHandler = (req, res) => {
   if (!po) return res.status(404).json({ success: false, error: "PO not found" });
   const user = (req as any).user;
   const { status } = req.body;
+  const prevStatus = po.status;
 
   po.status = status;
   if (status === "received") po.receivedDate = new Date().toISOString();
   po.updatedAt = new Date().toISOString();
   persistPurchaseOrder(po);
+
+  // عند استلام الأمر: إنشاء مصروف تلقائي ليظهر في المصروفات واللوحة المالية
+  if (status === "received" && prevStatus !== "received" && po.totalAmount > 0) {
+    const expenseExists = expenses.some((e: any) => e.purchaseOrderId === po.id);
+    if (!expenseExists) {
+      const expense: Expense = {
+        id: generateId("exp"),
+        category: "materials",
+        description: `أمر شراء ${po.poNumber} - ${po.supplierNameAr}`,
+        amount: po.totalAmount,
+        date: (po.receivedDate || new Date().toISOString()).split("T")[0] + "T00:00:00.000Z",
+        vendor: po.supplierNameAr,
+        reference: po.poNumber,
+        notes: `مشتريات مرتبطة بأمر الشراء ${po.poNumber}`,
+        createdBy: user.id,
+        createdByName: user.fullNameAr || user.fullName || "",
+        createdAt: new Date().toISOString(),
+        purchaseOrderId: po.id,
+        source: "purchase_order",
+      };
+      expenses.unshift(expense);
+      persistExpense(expense);
+      persistAuditLog(logAudit(user.id, user.fullNameAr, "PO_TO_EXPENSE", "expense", expense.id,
+        `Auto-created expense from PO ${po.poNumber}: ${po.totalAmount} EGP`));
+    }
+  }
 
   const log = logAudit(user.id, user.fullNameAr, "UPDATE_PO_STATUS", "purchase_order", po.id,
     `Updated PO ${po.poNumber} status to ${status}`);
@@ -229,6 +257,40 @@ export const recordPOPayment: RequestHandler = (req, res) => {
   persistAuditLog(log);
 
   res.json({ success: true, data: po });
+};
+
+// POST /api/purchase-orders/:id/create-expense — إنشاء مصروف يدوي من أمر شراء مستلم
+export const createExpenseFromPO: RequestHandler = (req, res) => {
+  const po = purchaseOrders.find((p) => p.id === req.params.id);
+  if (!po) return res.status(404).json({ success: false, error: "PO not found" });
+  const user = (req as any).user;
+  if (po.status !== "received") {
+    return res.status(400).json({ success: false, error: "يجب استلام الأمر أولاً لتسجيله كمصروف" });
+  }
+  const expenseExists = expenses.some((e: any) => e.purchaseOrderId === po.id);
+  if (expenseExists) return res.status(400).json({ success: false, error: "تم تسجيل هذا الأمر كمصروف مسبقاً" });
+
+  const expense: Expense = {
+    id: generateId("exp"),
+    category: "materials",
+    description: `أمر شراء ${po.poNumber} - ${po.supplierNameAr}`,
+    amount: po.totalAmount,
+    date: (po.receivedDate || new Date().toISOString()).split("T")[0] + "T00:00:00.000Z",
+    vendor: po.supplierNameAr,
+    reference: po.poNumber,
+    notes: `مشتريات مرتبطة بأمر الشراء ${po.poNumber}`,
+    createdBy: user.id,
+    createdByName: user.fullNameAr || user.fullName || "",
+    createdAt: new Date().toISOString(),
+    purchaseOrderId: po.id,
+    source: "purchase_order",
+  };
+  expenses.unshift(expense);
+  persistExpense(expense);
+  persistAuditLog(logAudit(user.id, user.fullNameAr, "PO_TO_EXPENSE", "expense", expense.id,
+    `Created expense from PO ${po.poNumber}: ${po.totalAmount} EGP`));
+
+  res.status(201).json({ success: true, data: expense, message: "تم تسجيل المصروف بنجاح" });
 };
 
 // ══════════════════════════════════════════

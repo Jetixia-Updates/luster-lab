@@ -10,6 +10,7 @@ import {
   pricingRules,
   doctors,
   expenses,
+  purchaseOrders,
   generateId,
   generateInvoiceNumber,
   persistInvoice,
@@ -400,11 +401,17 @@ export const getFinancialSummary: RequestHandler = (req, res) => {
 
   const periodInvoices = invoices.filter((i) => i.issuedDate.startsWith(period) && i.status !== "cancelled");
   const periodExpenses = expenses.filter((e) => e.date.startsWith(period));
+  // إضافة أوامر الشراء المستلمة التي ليس لها مصروف مرتبط (للتوافق مع البيانات القديمة)
+  const receivedPOsNoExpense = purchaseOrders.filter(
+    (po) => po.status === "received" && po.receivedDate?.startsWith(period) &&
+    !expenses.some((e: any) => e.purchaseOrderId === po.id)
+  );
+  const poExpensesSupplement = receivedPOsNoExpense.reduce((s, po) => s + po.totalAmount, 0);
 
   const totalRevenue = periodInvoices.reduce((s, i) => s + i.totalAmount, 0);
   const totalCollected = periodInvoices.reduce((s, i) => s + i.paidAmount, 0);
   const totalOutstanding = totalRevenue - totalCollected;
-  const totalExpensesAmount = periodExpenses.reduce((s, e) => s + e.amount, 0);
+  const totalExpensesAmount = periodExpenses.reduce((s, e) => s + e.amount, 0) + poExpensesSupplement;
 
   // Find top work type
   const workTypeCounts: Record<string, number> = {};

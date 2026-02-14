@@ -206,6 +206,40 @@ export interface WorkflowStep {
 // DEPARTMENT-SPECIFIC DATA
 // ========================================
 
+export interface CADDesignStage {
+  id: string;
+  name: string;
+  nameAr: string;
+  status: "pending" | "in_progress" | "completed" | "rejected";
+  startTime?: string;
+  endTime?: string;
+  notes?: string;
+  assignedTo?: string;
+}
+
+export interface CADAnnotation {
+  id: string;
+  type: "measurement" | "margin_line" | "contact_point" | "occlusion" | "note" | "thickness";
+  label: string;
+  value?: string; // e.g. "1.2mm"
+  position?: { x: number; y: number; z: number };
+  color?: string;
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface CADDesignVersion {
+  id: string;
+  version: number;
+  label: string;
+  files: CaseAttachment[];
+  annotations: CADAnnotation[];
+  thumbnail?: string;
+  createdAt: string;
+  createdBy: string;
+  notes?: string;
+}
+
 export interface CADData {
   designerId: string;
   designerName: string;
@@ -214,6 +248,35 @@ export interface CADData {
   endTime?: string;
   designFiles: CaseAttachment[];
   software?: string;
+  notes?: string;
+  // Enhanced CAD fields
+  designStages?: CADDesignStage[];
+  currentStage?: string;
+  annotations?: CADAnnotation[];
+  versions?: CADDesignVersion[];
+  currentVersion?: number;
+  marginType?: string; // chamfer, shoulder, knife-edge, feather-edge
+  occlusionType?: string; // centric, lateral, protrusive
+  insertDirection?: string; // occlusal, buccal, lingual, mesial, distal
+  dieTrimHeight?: number; // mm
+  cementGap?: number; // microns
+  spacerThickness?: number; // microns
+  wallThickness?: number; // mm
+  connectorSize?: number; // mm²
+  designParameters?: Record<string, any>;
+  reviewNotes?: string;
+  rejectionReason?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+}
+
+export interface CAMStage {
+  id: string;
+  name: string;
+  nameAr: string;
+  status: "pending" | "in_progress" | "completed" | "rejected";
+  startTime?: string;
+  endTime?: string;
   notes?: string;
 }
 
@@ -225,12 +288,39 @@ export interface CAMData {
   endTime?: string;
   blockType: string;
   blockId?: string; // Inventory reference
+  blockName?: string;
+  blockSku?: string;
   machineId?: string;
   machineName?: string;
   millingDuration?: number; // minutes
   materialDeducted: boolean;
   inventoryTransactionId?: string;
   errors?: string[];
+  notes?: string;
+  // Full workflow
+  stages?: CAMStage[];
+  currentStage?: string;
+  millingStrategy?: string; // wet/dry
+  spindleSpeed?: number;
+  feedRate?: number;
+  burType?: string;
+  // Stage-specific
+  camStlFiles?: { id: string; fileName: string }[];
+  blockMounted?: boolean;
+  millingStartTime?: string | null;
+  partRemoved?: boolean;
+  cleanDone?: boolean;
+  inspectionPassed?: boolean | null;
+  inspectionNotes?: string;
+}
+
+export interface FinishingStage {
+  id: string;
+  name: string;
+  nameAr: string;
+  status: "pending" | "in_progress" | "completed" | "rejected";
+  startTime?: string;
+  endTime?: string;
   notes?: string;
 }
 
@@ -246,6 +336,19 @@ export interface FinishingData {
   firingCycles: number;
   qualityScore?: number; // 1-10
   notes?: string;
+  // Full workflow stages
+  stages?: FinishingStage[];
+  currentStage?: string;
+  // Stage-specific
+  pieceReceived?: boolean;
+  initialCleanDone?: boolean;
+  baseColoringDone?: boolean;
+  extraColoringDone?: boolean;
+  furnaceReady?: boolean;
+  firstFiringDone?: boolean;
+  polishingDone?: boolean;
+  visualCheckPassed?: boolean | null;
+  visualCheckNotes?: string;
 }
 
 export interface ColoringStage {
@@ -553,6 +656,10 @@ export interface Expense {
   createdBy: string;
   createdByName: string;
   createdAt: string;
+  /** ربط بأمر شراء - للمشتريات التلقائية */
+  purchaseOrderId?: string;
+  /** مصدر المصروف: manual | purchase_order */
+  source?: "manual" | "purchase_order";
 }
 
 // ========================================
