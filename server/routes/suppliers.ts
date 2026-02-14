@@ -10,6 +10,7 @@ import {
   inventoryItems,
   invoices,
   cases,
+  expenses,
   pricingRules,
   generateId,
   generatePONumber,
@@ -249,8 +250,7 @@ export const getCostAnalysis: RequestHandler = (req, res) => {
   const totalPurchasesCost = periodPOs.reduce((s, po) => s + po.totalAmount, 0);
 
   // Overhead from expenses (rent, utilities, maintenance, etc.)
-  const { expenses: expArr } = require("../data/store");
-  const periodExpenses = expArr.filter((e: any) => e.date.startsWith(period));
+  const periodExpenses = expenses.filter((e: any) => e.date.startsWith(period));
   const totalOverhead = periodExpenses
     .filter((e: any) => ["rent", "utilities", "maintenance", "salaries", "marketing", "transport"].includes(e.category))
     .reduce((s: number, e: any) => s + e.amount, 0);
