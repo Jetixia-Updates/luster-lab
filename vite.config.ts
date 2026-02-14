@@ -1,7 +1,9 @@
 import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { createServer, initializeStore } from "./server";
+
+// NOTE: Server code is imported dynamically only during dev serve mode.
+// This prevents build-time errors when DATABASE_URL is not available.
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -30,8 +32,9 @@ function expressPlugin(): Plugin {
     name: "express-plugin",
     apply: "serve",
     async configureServer(server) {
+      // Dynamic import: only load server code during dev, NOT during build
+      const { createServer, initializeStore } = await import("./server");
       const app = createServer();
-      // Initialize DB store before handling requests
       await initializeStore();
       server.middlewares.use(app);
     },
