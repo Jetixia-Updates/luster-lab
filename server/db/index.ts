@@ -14,7 +14,7 @@ let _db: NeonHttpDatabase<typeof schema> | null = null;
 
 function ensureConnection() {
   if (!_db) {
-    const url = process.env.DATABASE_URL;
+    const url = process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL;
     if (!url) throw new Error("DATABASE_URL environment variable is required");
     _sql = neon(url);
     _db = drizzle(_sql, { schema });

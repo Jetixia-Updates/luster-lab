@@ -27,3 +27,6 @@ dist-ssr
 .env
 .env.*
 drizzle/
+
+# Local Netlify folder
+.netlify

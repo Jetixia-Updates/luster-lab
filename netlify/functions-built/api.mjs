@@ -23868,7 +23868,7 @@ const wn = rt("users", {
 let Os = null, Is = null;
 function $s() {
   if (!Is) {
-    const r = process.env.DATABASE_URL;
+    const r = process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL;
     if (!r) throw new Error("DATABASE_URL environment variable is required");
     Os = Jt(r), Is = Fs(Os, { schema: cb });
   }
