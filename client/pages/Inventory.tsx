@@ -313,7 +313,7 @@ export default function Inventory() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Package className="w-7 h-7 text-indigo-600" />
-            إدارة المخازن
+            صرف من المخازن
           </h1>
           <p className="text-muted-foreground">إدارة شاملة للمواد والبلوكات والمستلزمات والأدوات</p>
         </div>

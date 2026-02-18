@@ -45,6 +45,7 @@ export const getDashboardStats: RequestHandler = (_req, res) => {
     casesInFinishing: cases.filter((c) => c.currentStatus === "finishing").length,
     casesInRemovable: cases.filter((c) => c.currentStatus === "removable").length,
     casesInQC: cases.filter((c) => c.currentStatus === "quality_control").length,
+    casesInAccounting: cases.filter((c) => c.currentStatus === "accounting").length,
     casesReadyForDelivery: cases.filter((c) => c.currentStatus === "ready_for_delivery").length,
     casesDeliveredToday: deliveredToday.length,
     totalDoctors: doctors.length,

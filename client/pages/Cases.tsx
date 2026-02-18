@@ -13,11 +13,17 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Search, Filter, Eye, Printer, ChevronLeft, ChevronRight,
-  FileText, Download, RefreshCcw,
+  FileText, Download, RefreshCcw, Send,
 } from "lucide-react";
 import type { DentalCase, CaseStatus } from "@shared/api";
 
 const PAGE_SIZE = 15;
+
+const DEPT_ROUTES: Partial<Record<CaseStatus, string>> = {
+  reception: "/reception", cad_design: "/cad", cam_milling: "/cam",
+  finishing: "/finishing", removable: "/removable", quality_control: "/qc",
+  accounting: "/accounting", ready_for_delivery: "/delivery",
+};
 
 export default function Cases() {
   const [allCases, setAllCases] = useState<DentalCase[]>([]);
@@ -191,12 +197,19 @@ export default function Cases() {
                           {new Date(c.receivedDate).toLocaleDateString("ar-EG")}
                         </td>
                         <td className="py-3 px-2 text-center">
-                          <div className="flex items-center gap-1 justify-center">
+                          <div className="flex items-center gap-1 justify-center flex-wrap">
                             <Link to={`/cases/${c.id}`}>
                               <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="عرض التفاصيل">
                                 <Eye className="w-4 h-4" />
                               </Button>
                             </Link>
+                            {DEPT_ROUTES[c.currentStatus] && (
+                              <Link to={DEPT_ROUTES[c.currentStatus]!} title="انتقل إلى القسم">
+                                <Button variant="ghost" size="sm" className="h-7 gap-0.5 text-xs" title="انتقل إلى القسم">
+                                  <Send className="w-3.5 h-3.5" /> القسم
+                                </Button>
+                            </Link>
+                            )}
                             <Link to={`/cases/${c.id}/print`}>
                               <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="طباعة باركود">
                                 <Printer className="w-4 h-4" />

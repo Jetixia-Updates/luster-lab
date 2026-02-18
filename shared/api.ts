@@ -626,6 +626,7 @@ export interface DashboardStats {
   casesInFinishing: number;
   casesInRemovable: number;
   casesInQC: number;
+  casesInAccounting?: number;
   casesReadyForDelivery: number;
   casesDeliveredToday: number;
   totalDoctors: number;

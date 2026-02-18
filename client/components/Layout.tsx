@@ -51,12 +51,17 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    title: "صرف من المخازن",
+    items: [
+      { path: "/inventory", label: "المخازن", icon: Package, roles: ["admin", "technician"] },
+    ],
+  },
+  {
     title: "إدارة",
     items: [
       { path: "/cases", label: "جميع الحالات", icon: FileText },
       { path: "/doctors", label: "الأطباء", icon: Stethoscope, roles: ["admin", "receptionist", "accountant"] },
       { path: "/patients", label: "المرضى", icon: Users, roles: ["admin", "receptionist"] },
-      { path: "/inventory", label: "المخازن", icon: Package, roles: ["admin", "technician"] },
       { path: "/suppliers", label: "الموردين", icon: Truck, roles: ["admin", "accountant"] },
       { path: "/accounting", label: "الحسابات", icon: Calculator, roles: ["admin", "accountant"] },
     ],

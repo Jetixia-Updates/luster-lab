@@ -15,14 +15,20 @@ import {
   ArrowRight, CheckCircle, Clock, User, Calendar,
   Palette, Hash, FileText, Send, Printer, Receipt,
   Eye, ArrowLeft, AlertTriangle, Tag, Box, Cpu,
-  PenTool, Paintbrush, ShieldCheck, Truck,
+  PenTool, Paintbrush, ShieldCheck, Truck, Workflow,
 } from "lucide-react";
 import type { DentalCase } from "@shared/api";
 
 const DEPT_ICONS: Record<string, any> = {
   reception: Tag, cad_design: PenTool, cam_milling: Cpu,
-  finishing: Paintbrush, quality_control: ShieldCheck,
+  finishing: Paintbrush, removable: Workflow, quality_control: ShieldCheck,
   accounting: Receipt, ready_for_delivery: Truck, delivered: CheckCircle,
+};
+
+const DEPT_ROUTES: Record<string, string> = {
+  reception: "/reception", cad_design: "/cad", cam_milling: "/cam",
+  finishing: "/finishing", removable: "/removable", quality_control: "/qc",
+  accounting: "/accounting", ready_for_delivery: "/delivery",
 };
 
 export default function CaseDetail() {
@@ -83,6 +89,13 @@ export default function CaseDetail() {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
+          {DEPT_ROUTES[c.currentStatus] && c.currentStatus !== "delivered" && c.currentStatus !== "cancelled" && (
+            <Link to={DEPT_ROUTES[c.currentStatus]}>
+              <Button size="sm" className="gap-1 bg-primary">
+                <Send className="w-3.5 h-3.5" /> انتقل إلى القسم
+              </Button>
+            </Link>
+          )}
           <Link to={`/cases/${c.id}/print`}>
             <Button variant="outline" size="sm" className="gap-1"><Printer className="w-3.5 h-3.5" /> طباعة باركود</Button>
           </Link>
@@ -204,6 +217,20 @@ export default function CaseDetail() {
                   <p>تقييم الجودة: <span className={`font-bold ${c.finishingData.qualityScore >= 7 ? "text-green-600" : "text-amber-600"}`}>{c.finishingData.qualityScore}/10</span></p>
                 )}
                 {c.finishingData.notes && <p className="text-muted-foreground">ملاحظات: {c.finishingData.notes}</p>}
+              </CardContent>
+            </Card>
+          )}
+
+          {c.removableData && (
+            <Card className="border-teal-200">
+              <CardHeader className="py-3"><CardTitle className="text-sm text-teal-700 flex items-center gap-1"><Workflow className="w-3.5 h-3.5" /> التركيبات المتحركة</CardTitle></CardHeader>
+              <CardContent className="pt-0 space-y-1.5 text-sm">
+                {c.removableData.technicianName && <p>الفني: <strong>{c.removableData.technicianName}</strong></p>}
+                {c.removableData.prostheticTypeAr && <p>النوع: {c.removableData.prostheticTypeAr}</p>}
+                {c.removableData.materialVariant && <p>سوفت/هارد: {c.removableData.materialVariant === "soft" ? "سوفت" : "هارد"}</p>}
+                {c.removableData.orthoTypeAr && <p>التقويم: {c.removableData.orthoTypeAr}</p>}
+                {(c.removableData as any).isPaused && <p><Badge className="bg-amber-500 text-white text-[10px]">موقوفة مؤقتاً</Badge></p>}
+                {c.removableData.notes && <p className="text-muted-foreground">ملاحظات: {c.removableData.notes}</p>}
               </CardContent>
             </Card>
           )}

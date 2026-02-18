@@ -90,8 +90,9 @@ export default function Dashboard() {
 
       {/* Workflow Pipeline */}
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <CardTitle className="text-lg">خط سير الإنتاج</CardTitle>
+          <Link to="/cases" className="text-sm text-primary hover:underline font-medium">جميع الحالات ←</Link>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
@@ -104,8 +105,8 @@ export default function Dashboard() {
                 status === "finishing" ? stats?.casesInFinishing :
                 status === "removable" ? stats?.casesInRemovable :
                 status === "quality_control" ? stats?.casesInQC :
-                status === "ready_for_delivery" ? stats?.casesReadyForDelivery :
-                status === "accounting" ? 0 : 0;
+                status === "accounting" ? (stats?.casesInAccounting ?? 0) :
+                status === "ready_for_delivery" ? stats?.casesReadyForDelivery : 0;
               const routes: Record<string, string> = {
                 reception: "/reception", cad_design: "/cad", cam_milling: "/cam",
                 finishing: "/finishing", removable: "/removable", quality_control: "/qc",
@@ -312,8 +313,8 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground">في التصميم</p>
                 </div>
                 <div className="p-3 rounded-lg bg-accent/50 text-center">
-                  <p className="text-2xl font-bold text-orange-600">{(stats?.casesInCAM || 0) + (stats?.casesInFinishing || 0)}</p>
-                  <p className="text-xs text-muted-foreground">في التصنيع</p>
+                  <p className="text-2xl font-bold text-orange-600">{(stats?.casesInCAM || 0) + (stats?.casesInFinishing || 0) + (stats?.casesInRemovable || 0)}</p>
+                  <p className="text-xs text-muted-foreground">في التصنيع والتركيبات</p>
                 </div>
                 <div className="p-3 rounded-lg bg-accent/50 text-center">
                   <p className="text-2xl font-bold text-emerald-600">{stats?.casesReadyForDelivery || 0}</p>

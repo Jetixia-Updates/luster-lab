@@ -166,6 +166,7 @@ export default function QualityControl() {
                               <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="finishing">التشطيب</SelectItem>
+                                <SelectItem value="removable">التركيبات المتحركة</SelectItem>
                                 <SelectItem value="cam_milling">التفريز</SelectItem>
                                 <SelectItem value="cad_design">التصميم</SelectItem>
                               </SelectContent>
