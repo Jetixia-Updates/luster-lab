@@ -43,6 +43,14 @@ export const getUsers: RequestHandler = (_req, res) => {
   res.json({ success: true, data: safeUsers });
 };
 
+export const getUser: RequestHandler = (req, res) => {
+  const id = String(req.params.id || "");
+  const user = users.find((u) => u.id === id);
+  if (!user) return res.status(404).json({ success: false, error: "الموظف غير موجود" });
+  const { password, ...safe } = user;
+  res.json({ success: true, data: safe });
+};
+
 export const createUser: RequestHandler = (req, res) => {
   const currentUser = (req as any).user;
   const { username, password, fullName, fullNameAr, email, role, department, phone, fingerprintId, baseSalary, workStartTime, workEndTime } = req.body;

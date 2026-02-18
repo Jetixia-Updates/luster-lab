@@ -19,6 +19,7 @@ import {
   LayoutDashboard, FileSpreadsheet, Edit, Trash2, ExternalLink,
   LogIn, LogOut, UserCheck, UserX, FileBarChart, AlertCircle,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import type { User, AttendanceRecord, PayrollPeriod, PayrollEntry, EmployeeAttendanceReport } from "@shared/api";
 
 const MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
@@ -315,7 +316,7 @@ export default function AttendanceModule() {
                 {todayStatus.map((s) => (
                   <div key={s.userId} className="flex items-center justify-between p-3 rounded-lg border">
                     <div>
-                      <p className="font-medium">{s.userName}</p>
+                      <Link to={`/users/${s.userId}`} className="font-medium hover:underline text-primary">{s.userName}</Link>
                       <p className="text-xs text-muted-foreground">
                         {s.present ? (s.checkIn || "—") + (s.checkOut ? ` → ${s.checkOut}` : " → داخل") : "لم يحضر"}
                       </p>
@@ -386,7 +387,9 @@ export default function AttendanceModule() {
                   <tbody>
                     {attendance.map((a) => (
                       <tr key={a.id} className="border-b hover:bg-accent/30">
-                        <td className="py-2">{a.userName}</td>
+                        <td className="py-2">
+                          <Link to={`/users/${a.userId}`} className="hover:underline text-primary">{a.userName}</Link>
+                        </td>
                         <td className="py-2">{a.date}</td>
                         <td className="py-2">{a.checkIn || "—"}</td>
                         <td className="py-2">{a.checkOut || "—"}</td>
@@ -440,7 +443,12 @@ export default function AttendanceModule() {
                     <tbody>
                       {reports.map((r) => (
                         <tr key={r.userId} className="border-b hover:bg-accent/30">
-                          <td className="py-2 font-medium">{r.userName}</td>
+                          <td className="py-2">
+                            <Link to={`/users/${r.userId}`} className="font-medium hover:underline text-primary flex items-center gap-1">
+                              {r.userName}
+                              <ExternalLink className="w-3 h-3 opacity-60" />
+                            </Link>
+                          </td>
                           <td className="py-2 text-muted-foreground">{r.workStartTime} - {r.workEndTime}</td>
                           <td className="py-2">{r.totalPresentDays}</td>
                           <td className="py-2">{r.totalAbsentDays}</td>

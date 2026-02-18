@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
-import { WORK_TYPE_LABELS, SHADE_COLORS } from "@/lib/constants";
+import { WORK_TYPE_LABELS, SHADE_COLORS, DENTAL_MATERIALS } from "@/lib/constants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -187,11 +187,15 @@ export default function Reception() {
 
               <div>
                 <Label>المادة</Label>
-                <Input
-                  value={form.material || ""}
-                  onChange={(e) => setForm({ ...form, material: e.target.value })}
-                  placeholder="مثال: Zirconia Multilayer"
-                />
+                <Select value={form.material || "none"} onValueChange={(v) => setForm({ ...form, material: v === "none" ? "" : v })}>
+                  <SelectTrigger><SelectValue placeholder="اختر المادة" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— اختر المادة —</SelectItem>
+                    {DENTAL_MATERIALS.map((m) => (
+                      <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>

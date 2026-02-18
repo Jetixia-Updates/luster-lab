@@ -18,7 +18,7 @@ import { errorHandler } from "./middleware/errorHandler";
 
 // Route handlers
 import { handleDemo } from "./routes/demo";
-import { login, getMe, getUsers, createUser, updateUser, toggleUserActive } from "./routes/auth";
+import { login, getMe, getUsers, getUser, createUser, updateUser, toggleUserActive } from "./routes/auth";
 import { getDoctors, getDoctor, createDoctor, updateDoctor, deleteDoctor, getPatients, createPatient, updatePatient } from "./routes/doctors";
 import {
   getCases, getCase, createCase, updateCase, deleteCase,
@@ -50,7 +50,7 @@ import {
 import {
   getAttendance, getAttendanceReport, getAttendanceReports, createAttendance, importAttendanceCSV, punchAttendance, getTodayStatus, getKioskData,
   updateAttendance, deleteAttendance,
-  getPayrollPeriods, getPayrollPeriod, createPayrollPeriod, updatePayrollStatus, updatePayrollEntry,
+  getPayrollPeriods, getPayrollPeriod, createPayrollPeriod, updatePayrollStatus, updatePayrollEntry, getPayrollUserEntries,
 } from "./routes/attendance";
 import {
   getSuppliers, getSupplier, createSupplier, updateSupplier, deleteSupplier,
@@ -93,6 +93,7 @@ export function createServer() {
   // ── Auth Routes (Protected) ──────────────────────
   app.get("/api/auth/me", getMe);
   app.get("/api/users", getUsers);
+  app.get("/api/users/:id", getUser);
   app.post("/api/users", createUser);
   app.put("/api/users/:id", updateUser);
   app.post("/api/users/:id/toggle-active", toggleUserActive);
@@ -208,6 +209,7 @@ export function createServer() {
   app.delete("/api/attendance/:id", deleteAttendance);
   app.get("/api/payroll/periods", getPayrollPeriods);
   app.get("/api/payroll/periods/:id", getPayrollPeriod);
+  app.get("/api/payroll/user/:userId/entries", getPayrollUserEntries);
   app.post("/api/payroll/periods", createPayrollPeriod);
   app.put("/api/payroll/periods/:id/status", updatePayrollStatus);
   app.put("/api/payroll/entries/:id", updatePayrollEntry);

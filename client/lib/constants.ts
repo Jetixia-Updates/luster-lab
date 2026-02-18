@@ -58,6 +58,43 @@ export const SHADE_COLORS = [
   "BL1", "BL2", "BL3", "BL4",
 ];
 
+/** المواد المستخدمة في معمل الأسنان */
+export const DENTAL_MATERIALS = [
+  // زركونيا
+  { value: "Zirconia Multilayer", label: "زركونيا متعدد الطبقات" },
+  { value: "Zirconia HT", label: "زركونيا شفاف HT" },
+  { value: "Zirconia ST", label: "زركونيا فائق الشفافية ST" },
+  { value: "Zirconia 3Y", label: "زركونيا 3Y" },
+  { value: "Zirconia 5Y", label: "زركونيا 5Y" },
+  { value: "Full Contour Zirconia", label: "زركونيا كونتور كامل" },
+  // PFM ومعادن
+  { value: "PFM (Metal Ceramic)", label: "PFM معدن/بورسلين" },
+  { value: "Nickel Chrome", label: "نيكل كروم" },
+  { value: "Cobalt Chrome", label: "كوبالت كروم" },
+  { value: "Gold Alloy", label: "سبيكة ذهب" },
+  // إي ماكس
+  { value: "IPS e.max Press", label: "IPS e.max ضغط" },
+  { value: "IPS e.max CAD", label: "IPS e.max CAD" },
+  { value: "IPS e.max LT", label: "IPS e.max LT شفاف" },
+  { value: "IPS e.max HT", label: "IPS e.max HT عالي الشفافية" },
+  // زراعة
+  { value: "Zirconia on Ti-Base", label: "زركونيا على قاعدة تيتانيوم" },
+  { value: "Titanium Abutment", label: "قاعدة تيتانيوم" },
+  { value: "Zirconia Abutment", label: "قاعدة زركونيا" },
+  // تركيبات متحركة
+  { value: "Acrylic Denture", label: "طقم أسنان أكريليك" },
+  { value: "Flexible (Valplast)", label: "فليكس بلست/مرن" },
+  { value: "Chrome Cobalt Partial", label: "جزئي كوبالت كروم" },
+  { value: "Acrylic Partial", label: "جزئي أكريليك" },
+  // كمبوزيت ومواد أخرى
+  { value: "Composite Resin", label: "ريزن كمبوزيت" },
+  { value: "Nanofill Composite", label: "كمبوزيت نانوفيل" },
+  { value: "PMMA Temporary", label: "PMMA طربوش مؤقت" },
+  { value: "Wax", label: "شمع" },
+  { value: "Model Resin", label: "ريزن نماذج" },
+  { value: "Other", label: "أخرى" },
+];
+
 export const WORKFLOW_ORDER: CaseStatus[] = [
   "reception", "cad_design", "cam_milling", "finishing", "removable",
   "quality_control", "accounting", "ready_for_delivery", "delivered",

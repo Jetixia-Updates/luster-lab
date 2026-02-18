@@ -4,6 +4,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { api } from "@/lib/api";
 import { ROLE_LABELS } from "@/lib/constants";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,8 +18,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { toast } from "sonner";
 import {
   Users, UserPlus, Shield, ShieldCheck, ShieldAlert,
-  CheckCircle, XCircle, Edit, Power, Search, Eye, EyeOff, ScanFace,
+  CheckCircle, XCircle, Edit, Power, Search, Eye, EyeOff, ScanFace, ExternalLink,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import FaceRegistrationDialog from "@/components/FaceRegistrationDialog";
 import type { User, UserRole } from "@shared/api";
 
@@ -54,6 +56,7 @@ const emptyForm = {
 
 export default function UserManagement() {
   const { user: currentUser } = useAuth();
+  const location = useLocation();
   const [users, setUsers] = useState<Omit<User, "password">[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -68,6 +71,17 @@ export default function UserManagement() {
   const [faceUser, setFaceUser] = useState<Omit<User, "password"> | null>(null);
 
   useEffect(() => { loadUsers(); }, []);
+
+  // فتح التعديل عند القدوم من صفحة تفاصيل الموظف
+  useEffect(() => {
+    const editId = (location.state as any)?.editUserId;
+    if (!editId || users.length === 0) return;
+    const u = users.find((x) => x.id === editId);
+    if (u) {
+      openEdit(u);
+      window.history.replaceState({}, "", "/users");
+    }
+  }, [users.length, location.state]);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -281,7 +295,10 @@ export default function UserManagement() {
                           </div>
                         </td>
                         <td className="py-3 px-3">
-                          <p className="font-medium">{user.fullNameAr}</p>
+                          <Link to={`/users/${user.id}`} className="font-medium hover:underline text-primary flex items-center gap-1">
+                            {user.fullNameAr}
+                            <ExternalLink className="w-3 h-3 opacity-60" />
+                          </Link>
                           {user.fullName && <p className="text-xs text-muted-foreground">{user.fullName}</p>}
                         </td>
                         <td className="py-3 px-3">

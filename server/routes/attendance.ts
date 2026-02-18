@@ -500,6 +500,17 @@ export const createPayrollPeriod: RequestHandler = (req, res) => {
   res.status(201).json({ success: true, data: { ...period, entries } });
 };
 
+// GET /api/payroll/user/:userId/entries - رواتب الموظف
+export const getPayrollUserEntries: RequestHandler = (req, res) => {
+  const userId = String(req.params.userId || "");
+  const entries = payrollEntries.filter((e) => e.userId === userId);
+  const withPeriod = entries.map((e) => {
+    const p = payrollPeriods.find((x) => x.id === e.periodId);
+    return { ...e, year: p?.year, month: p?.month, periodStatus: p?.status };
+  }).sort((a, b) => (b.year! - a.year!) || (b.month! - a.month!));
+  res.json({ success: true, data: withPeriod });
+};
+
 // PUT /api/payroll/periods/:id/status
 export const updatePayrollStatus: RequestHandler = (req, res) => {
   const p = payrollPeriods.find((x) => x.id === req.params.id);
