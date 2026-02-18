@@ -93,6 +93,57 @@ export type InventoryCategory =
 export type TransactionType = "deduction" | "addition" | "adjustment" | "purchase";
 
 // ========================================
+// BARCODE & QR MODULE
+// ========================================
+
+export type BarcodeLogAction = "scan" | "generate" | "print" | "create" | "edit" | "delete";
+
+export type BarcodeLabelType = "case" | "warehouse";
+
+export type WarehouseQuantityUnit = "شيكارة" | "عينة" | "علبة" | "كيلو" | "جرام" | "قطعة" | "لتر" | "أخرى";
+
+export interface BarcodeLabel {
+  id: string;
+  labelType?: BarcodeLabelType;  // case | warehouse
+  barcodeValue: string;       // النص المُرمَّز (رقم الحالة، SKU، أو نص مخصص)
+  labelName?: string;         // الاسم / الوصف للملصق
+  caseId?: string;
+  caseNumber?: string;
+  patientName?: string;
+  doctorName?: string;
+  receivedDate?: string;
+  expectedDeliveryDate?: string;
+  actualDeliveryDate?: string;
+  notes?: string;
+  // حقول المخازن
+  productName?: string;
+  weightKg?: number;
+  weightGrams?: number;
+  quantity?: number;
+  quantityUnit?: WarehouseQuantityUnit;
+  createdBy: string;
+  createdByName: string;
+  createdAt: string;
+  updatedAt: string;
+  updatedBy?: string;
+  updatedByName?: string;
+}
+
+export interface BarcodeLog {
+  id: string;
+  action: BarcodeLogAction;
+  labelId?: string;
+  barcodeValue: string;
+  labelName?: string;
+  caseId?: string;
+  caseNumber?: string;
+  metadata?: Record<string, unknown>;  // scanMethod, etc.
+  performedBy: string;
+  performedByName: string;
+  createdAt: string;
+}
+
+// ========================================
 // USER & AUTH
 // ========================================
 
@@ -107,8 +158,61 @@ export interface User {
   department: string;
   phone?: string;
   active: boolean;
+  fingerprintId?: string;   // رقم البصمة في جهاز الحضور للمطابقة
+  faceDescriptor?: number[]; // واصف الوجه للتعرف بالوجه (128 رقم)
+  baseSalary?: number;      // الراتب الأساسي
+  hireDate?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+// ========================================
+// ATTENDANCE & PAYROLL (حضور وإنصراف - رواتب - خصومات)
+// ========================================
+
+export type AttendancePunch = "in" | "out";
+
+export interface AttendanceRecord {
+  id: string;
+  userId: string;
+  userName: string;
+  fingerprintId?: string;   // من جهاز البصمة للمطابقة
+  date: string;             // YYYY-MM-DD
+  checkIn?: string;         // ISO time
+  checkOut?: string;
+  punchType?: AttendancePunch;
+  source: "manual" | "import" | "fingerprint";
+  deviceId?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface PayrollPeriod {
+  id: string;
+  year: number;
+  month: number;
+  status: "draft" | "approved" | "paid";
+  createdAt: string;
+}
+
+export interface PayrollEntry {
+  id: string;
+  periodId: string;
+  userId: string;
+  userName: string;
+  baseSalary: number;
+  overtime: number;
+  allowances: number;
+  // خصومات
+  absenceDays: number;
+  absenceDeduction: number;
+  lateMinutes: number;
+  lateDeduction: number;
+  otherDeductions: number;
+  totalDeductions: number;
+  netSalary: number;
+  notes?: string;
+  createdAt: string;
 }
 
 export interface AuthLoginRequest {

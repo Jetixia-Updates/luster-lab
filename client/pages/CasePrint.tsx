@@ -1,6 +1,6 @@
 /**
  * Case Barcode & QR Label Print Page
- * Code128 barcode + QR code - compatible with all scanners and phone cameras
+ * باركود + QR مع الاسم، تاريخ الاستلام، تاريخ التسليم، والمواد المصروفة من المخازن
  */
 
 import { useEffect, useState } from "react";
@@ -10,17 +10,24 @@ import { WORK_TYPE_LABELS, STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constant
 import { Button } from "@/components/ui/button";
 import { Printer, ArrowRight } from "lucide-react";
 import { BarcodeDisplay, QRCodeDisplay } from "@/components/barcode";
-import type { DentalCase } from "@shared/api";
+import type { DentalCase, InventoryTransaction } from "@shared/api";
 
 export default function CasePrint() {
   const { id } = useParams();
   const [dentalCase, setDentalCase] = useState<DentalCase | null>(null);
+  const [inventoryTx, setInventoryTx] = useState<InventoryTransaction[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (id) {
-      api.get<any>(`/cases/${id}`)
-        .then((res) => setDentalCase(res.data))
+      Promise.all([
+        api.get<any>(`/cases/${id}`),
+        api.get<any>(`/inventory/transactions?caseId=${id}`),
+      ])
+        .then(([caseRes, txRes]) => {
+          setDentalCase(caseRes.data);
+          setInventoryTx((txRes.data || []).filter((t: InventoryTransaction) => t.type === "deduction"));
+        })
         .finally(() => setLoading(false));
     }
   }, [id]);
@@ -127,7 +134,36 @@ export default function CasePrint() {
             <span className="text-gray-500">تاريخ التسليم المتوقع:</span>
             <span className="font-bold mr-2">{new Date(dentalCase.expectedDeliveryDate).toLocaleDateString("ar-EG")}</span>
           </div>
+          {dentalCase.actualDeliveryDate && (
+            <div className="border-b pb-2">
+              <span className="text-gray-500">تاريخ التسليم الفعلي:</span>
+              <span className="font-bold mr-2">{new Date(dentalCase.actualDeliveryDate).toLocaleDateString("ar-EG")}</span>
+            </div>
+          )}
+          {inventoryTx.length > 0 && (() => {
+            const firstDeduct = inventoryTx.reduce((a, t) => !a || t.createdAt < a.createdAt ? t : a, null as InventoryTransaction | null);
+            return firstDeduct ? (
+              <div className="border-b pb-2 col-span-2">
+                <span className="text-gray-500">تاريخ أول صرف من المخزن:</span>
+                <span className="font-bold mr-2">{new Date(firstDeduct.createdAt).toLocaleDateString("ar-EG")}</span>
+              </div>
+            ) : null;
+          })()}
         </div>
+
+        {inventoryTx.length > 0 && (
+          <div className="mt-4 pt-3 border-t">
+            <span className="text-gray-500 text-sm font-medium">المواد المصروفة من المخازن:</span>
+            <ul className="text-sm mt-1 space-y-0.5">
+              {inventoryTx.map((t) => (
+                <li key={t.id} className="flex justify-between">
+                  <span>{t.itemName}</span>
+                  <span className="font-mono">× {t.quantity} — {t.createdAt ? new Date(t.createdAt).toLocaleDateString("ar-EG") : ""}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {dentalCase.doctorNotes && (
           <div className="mt-4 pt-3 border-t">
@@ -154,6 +190,7 @@ export default function CasePrint() {
               <div className="text-xs mt-1 space-y-0.5">
                 <p className="font-bold">{dentalCase.caseNumber}</p>
                 <p>{dentalCase.patientName}</p>
+                <p className="text-gray-500">استلام: {new Date(dentalCase.receivedDate).toLocaleDateString("ar-EG")} | تسليم: {new Date(dentalCase.expectedDeliveryDate).toLocaleDateString("ar-EG")}</p>
                 <p className="text-gray-500">{WORK_TYPE_LABELS[dentalCase.workType]?.ar} | {dentalCase.shadeColor}</p>
               </div>
             </div>

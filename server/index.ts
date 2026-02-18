@@ -44,6 +44,15 @@ import {
   getTopDoctors, getWorkTypeStats, getAuditLogs,
 } from "./routes/dashboard";
 import {
+  getBarcodeLabels, getBarcodeLabel, createBarcodeLabel, updateBarcodeLabel, deleteBarcodeLabel,
+  getBarcodeLogs, logBarcodeAction,
+} from "./routes/barcode";
+import {
+  getAttendance, createAttendance, importAttendanceCSV, punchAttendance, getTodayStatus, getKioskData,
+  updateAttendance, deleteAttendance,
+  getPayrollPeriods, getPayrollPeriod, createPayrollPeriod, updatePayrollStatus, updatePayrollEntry,
+} from "./routes/attendance";
+import {
   getSuppliers, getSupplier, createSupplier, updateSupplier, deleteSupplier,
   getPurchaseOrders, getPurchaseOrder, createPurchaseOrder, updatePOStatus, recordPOPayment,
   createExpenseFromPO,
@@ -68,6 +77,10 @@ export function createServer() {
 
   // ── Auth Routes (Public) ─────────────────────────
   app.post("/api/auth/login", login);
+
+  // ── Kiosk Routes (Public - بدون تسجيل دخول للاستخدام المباشر) ───
+  app.get("/api/attendance/kiosk-data", getKioskData);
+  app.post("/api/attendance/punch", punchAttendance);
 
   // ── Apply Authentication ─────────────────────────
   app.use("/api", authenticate);
@@ -169,6 +182,28 @@ export function createServer() {
   app.get("/api/analytics/material-profitability", getMaterialProfitability);
   app.get("/api/analytics/purchase-vs-sales", getPurchaseVsSales);
   app.get("/api/analytics/supplier-balance", getSupplierBalances);
+
+  // ── Barcode & QR Module ──────────────────────────
+  app.get("/api/barcode/labels", getBarcodeLabels);
+  app.get("/api/barcode/labels/:id", getBarcodeLabel);
+  app.post("/api/barcode/labels", createBarcodeLabel);
+  app.put("/api/barcode/labels/:id", updateBarcodeLabel);
+  app.delete("/api/barcode/labels/:id", deleteBarcodeLabel);
+  app.get("/api/barcode/logs", getBarcodeLogs);
+  app.post("/api/barcode/log", logBarcodeAction);
+
+  // ── Attendance & Payroll ────────────────────────
+  app.get("/api/attendance", getAttendance);
+  app.get("/api/attendance/today", getTodayStatus);
+  app.post("/api/attendance", createAttendance);
+  app.post("/api/attendance/import", importAttendanceCSV);
+  app.put("/api/attendance/:id", updateAttendance);
+  app.delete("/api/attendance/:id", deleteAttendance);
+  app.get("/api/payroll/periods", getPayrollPeriods);
+  app.get("/api/payroll/periods/:id", getPayrollPeriod);
+  app.post("/api/payroll/periods", createPayrollPeriod);
+  app.put("/api/payroll/periods/:id/status", updatePayrollStatus);
+  app.put("/api/payroll/entries/:id", updatePayrollEntry);
 
   // ── Dashboard & Reports ──────────────────────────
   app.get("/api/dashboard/stats", getDashboardStats);

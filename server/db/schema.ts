@@ -152,6 +152,60 @@ export const deliveries = pgTable("deliveries", {
   index("idx_del_case").on(t.caseId),
 ]);
 
+// ── Barcode Labels (ملصقات الباركود المحفوظة) ───────
+export const barcodeLabels = pgTable("barcode_labels", {
+  id: text("id").primaryKey(),
+  barcodeValue: text("barcode_value").notNull(),
+  caseId: text("case_id"),
+  data: jsonb("data").notNull(),
+}, (t) => [
+  index("idx_barcode_value").on(t.barcodeValue),
+  index("idx_barcode_case").on(t.caseId),
+]);
+
+// ── Barcode Logs (سجل عمليات الباركود) ──────────────
+export const barcodeLogs = pgTable("barcode_logs", {
+  id: text("id").primaryKey(),
+  action: text("action").notNull(),
+  barcodeValue: text("barcode_value").notNull(),
+  data: jsonb("data").notNull(),
+}, (t) => [
+  index("idx_barcode_log_action").on(t.action),
+  index("idx_barcode_log_value").on(t.barcodeValue),
+]);
+
+// ── Attendance Records ───────────────────────
+export const attendanceRecords = pgTable("attendance_records", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  date: text("date").notNull(),
+  data: jsonb("data").notNull(),
+}, (t) => [
+  index("idx_att_user").on(t.userId),
+  index("idx_att_date").on(t.date),
+]);
+
+// ── Payroll Periods ──────────────────────────
+export const payrollPeriods = pgTable("payroll_periods", {
+  id: text("id").primaryKey(),
+  year: integer("year").notNull(),
+  month: integer("month").notNull(),
+  data: jsonb("data").notNull(),
+}, (t) => [
+  index("idx_payroll_ym").on(t.year, t.month),
+]);
+
+// ── Payroll Entries ──────────────────────────
+export const payrollEntries = pgTable("payroll_entries", {
+  id: text("id").primaryKey(),
+  periodId: text("period_id").notNull(),
+  userId: text("user_id").notNull(),
+  data: jsonb("data").notNull(),
+}, (t) => [
+  index("idx_payentry_period").on(t.periodId),
+  index("idx_payentry_user").on(t.userId),
+]);
+
 // ── App Counters ──────────────────────────────
 export const counters = pgTable("counters", {
   name: text("name").primaryKey(),

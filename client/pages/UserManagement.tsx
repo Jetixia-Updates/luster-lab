@@ -13,12 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   Users, UserPlus, Shield, ShieldCheck, ShieldAlert,
-  CheckCircle, XCircle, Edit, Power, Search, Eye, EyeOff,
+  CheckCircle, XCircle, Edit, Power, Search, Eye, EyeOff, ScanFace,
 } from "lucide-react";
+import FaceRegistrationDialog from "@/components/FaceRegistrationDialog";
 import type { User, UserRole } from "@shared/api";
 
 const ROLE_ICONS: Record<UserRole, typeof Shield> = {
@@ -47,7 +48,7 @@ const DEPARTMENT_OPTIONS = [
 const emptyForm = {
   username: "", fullNameAr: "", fullName: "", email: "",
   role: "technician" as UserRole, department: "reception",
-  phone: "", password: "",
+  phone: "", password: "", fingerprintId: "", baseSalary: "",
 };
 
 export default function UserManagement() {
@@ -63,6 +64,7 @@ export default function UserManagement() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [faceUser, setFaceUser] = useState<Omit<User, "password"> | null>(null);
 
   useEffect(() => { loadUsers(); }, []);
 
@@ -94,6 +96,8 @@ export default function UserManagement() {
       username: user.username, fullNameAr: user.fullNameAr, fullName: user.fullName,
       email: user.email, role: user.role, department: user.department,
       phone: user.phone || "", password: "",
+      fingerprintId: (user as User).fingerprintId || "",
+      baseSalary: (user as User).baseSalary != null ? String((user as User).baseSalary) : "",
     });
     setEditingUser(user);
     setShowPassword(false);
@@ -114,10 +118,15 @@ export default function UserManagement() {
       if (editingUser) {
         const payload: any = { ...form };
         if (!payload.password) delete payload.password;
+        payload.fingerprintId = form.fingerprintId?.trim() || undefined;
+        payload.baseSalary = form.baseSalary ? parseFloat(form.baseSalary) : undefined;
         await api.put<any>(`/users/${editingUser.id}`, payload);
         toast.success("تم تحديث المستخدم بنجاح");
       } else {
-        await api.post<any>("/users", form);
+        const createPayload: any = { ...form };
+        createPayload.fingerprintId = form.fingerprintId?.trim() || undefined;
+        createPayload.baseSalary = form.baseSalary ? parseFloat(form.baseSalary) : undefined;
+        await api.post<any>("/users", createPayload);
         toast.success("تم إنشاء المستخدم بنجاح");
       }
       setShowForm(false);
@@ -126,6 +135,16 @@ export default function UserManagement() {
       toast.error(err.message || "حدث خطأ");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleFaceSaved = async (descriptor: number[]) => {
+    if (!faceUser) return;
+    try {
+      await api.put(`/users/${faceUser.id}`, { faceDescriptor: descriptor });
+      loadUsers();
+    } catch (e: any) {
+      toast.error(e?.message || "فشل الحفظ");
     }
   };
 
@@ -280,6 +299,9 @@ export default function UserManagement() {
                         </td>
                         <td className="py-3 px-3 text-center">
                           <div className="flex items-center gap-1 justify-center">
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setFaceUser(user)} title="تسجيل الوجه">
+                              <ScanFace className="w-3.5 h-3.5" />
+                            </Button>
                             <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openEdit(user)} title="تعديل">
                               <Edit className="w-3.5 h-3.5" />
                             </Button>
@@ -305,9 +327,10 @@ export default function UserManagement() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-lg" dir="rtl">
+        <DialogContent className="max-w-lg" dir="rtl" aria-describedby="user-form-desc">
           <DialogHeader>
             <DialogTitle>{editingUser ? "تعديل مستخدم" : "إضافة مستخدم جديد"}</DialogTitle>
+            <DialogDescription id="user-form-desc">{editingUser ? "تعديل بيانات المستخدم" : "أدخل بيانات المستخدم الجديد"}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-2">
             <div className="grid grid-cols-2 gap-3">
@@ -370,6 +393,19 @@ export default function UserManagement() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
+                <Label>رقم البصمة (جهاز الحضور)</Label>
+                <Input value={form.fingerprintId} onChange={(e) => setForm({ ...form, fingerprintId: e.target.value })}
+                  placeholder="1" dir="ltr" />
+              </div>
+              <div>
+                <Label>الراتب الأساسي (ج.م)</Label>
+                <Input type="number" value={form.baseSalary} onChange={(e) => setForm({ ...form, baseSalary: e.target.value })}
+                  placeholder="5000" dir="ltr" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
                 <Label>البريد الإلكتروني</Label>
                 <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="ahmed@luster.com" dir="ltr" type="email" />
@@ -390,6 +426,14 @@ export default function UserManagement() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <FaceRegistrationDialog
+        open={!!faceUser}
+        onOpenChange={(o) => !o && setFaceUser(null)}
+        userName={faceUser?.fullNameAr || ""}
+        userId={faceUser?.id || ""}
+        onSaved={handleFaceSaved}
+      />
     </div>
   );
 }

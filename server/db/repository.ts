@@ -336,6 +336,112 @@ export async function saveDelivery(item: any) {
 }
 
 // ══════════════════════════════════════════════
+//  BARCODE LABELS
+// ══════════════════════════════════════════════
+
+export async function loadBarcodeLabels<T>(): Promise<T[]> {
+  const rows = await db.select().from(schema.barcodeLabels);
+  return extractData<T>(rows);
+}
+
+export async function saveBarcodeLabel(item: any) {
+  await db.insert(schema.barcodeLabels).values({
+    id: item.id,
+    barcodeValue: item.barcodeValue || "",
+    caseId: item.caseId || "",
+    data: item,
+  }).onConflictDoUpdate({
+    target: schema.barcodeLabels.id,
+    set: { barcodeValue: item.barcodeValue || "", caseId: item.caseId || "", data: item },
+  });
+}
+
+export async function deleteBarcodeLabel(id: string) {
+  await db.delete(schema.barcodeLabels).where(eq(schema.barcodeLabels.id, id));
+}
+
+// ══════════════════════════════════════════════
+//  BARCODE LOGS
+// ══════════════════════════════════════════════
+
+export async function loadBarcodeLogs<T>(): Promise<T[]> {
+  const rows = await db.select().from(schema.barcodeLogs);
+  return extractData<T>(rows);
+}
+
+export async function saveBarcodeLog(item: any) {
+  await db.insert(schema.barcodeLogs).values({
+    id: item.id,
+    action: item.action || "",
+    barcodeValue: item.barcodeValue || "",
+    data: item,
+  });
+}
+
+// ══════════════════════════════════════════════
+//  ATTENDANCE
+// ══════════════════════════════════════════════
+
+export async function loadAttendanceRecords<T>(): Promise<T[]> {
+  const rows = await db.select().from(schema.attendanceRecords);
+  return extractData<T>(rows);
+}
+
+export async function saveAttendanceRecord(item: any) {
+  await db.insert(schema.attendanceRecords).values({
+    id: item.id,
+    userId: item.userId || "",
+    date: item.date || "",
+    data: item,
+  }).onConflictDoUpdate({
+    target: schema.attendanceRecords.id,
+    set: { userId: item.userId || "", date: item.date || "", data: item },
+  });
+}
+
+export async function deleteAttendanceRecord(id: string) {
+  await db.delete(schema.attendanceRecords).where(eq(schema.attendanceRecords.id, id));
+}
+
+// ══════════════════════════════════════════════
+//  PAYROLL
+// ══════════════════════════════════════════════
+
+export async function loadPayrollPeriods<T>(): Promise<T[]> {
+  const rows = await db.select().from(schema.payrollPeriods);
+  return extractData<T>(rows);
+}
+
+export async function savePayrollPeriod(item: any) {
+  await db.insert(schema.payrollPeriods).values({
+    id: item.id,
+    year: item.year || 0,
+    month: item.month || 0,
+    data: item,
+  }).onConflictDoUpdate({
+    target: schema.payrollPeriods.id,
+    set: { year: item.year || 0, month: item.month || 0, data: item },
+  });
+}
+
+export async function loadPayrollEntries<T>(): Promise<T[]> {
+  const rows = await db.select().from(schema.payrollEntries);
+  return extractData<T>(rows);
+}
+
+export async function savePayrollEntry(item: any) {
+  await db.insert(schema.payrollEntries).values({
+    id: item.id,
+    periodId: item.periodId || "",
+    userId: item.userId || "",
+    data: item,
+  }).onConflictDoUpdate({
+    target: schema.payrollEntries.id,
+    set: { periodId: item.periodId || "", userId: item.userId || "", data: item },
+  });
+}
+
+// ══════════════════════════════════════════════
 //  COUNTERS
 // ══════════════════════════════════════════════
 

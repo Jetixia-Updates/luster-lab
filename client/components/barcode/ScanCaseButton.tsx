@@ -31,6 +31,8 @@ export function ScanCaseButton({
   const handleScan = async (value: string) => {
     const v = value.trim();
     if (!v) return;
+    // تسجيل المسح تلقائياً
+    api.post("/barcode/log", { action: "scan", barcodeValue: v, metadata: { source: "ScanCaseButton" } }).catch(() => {});
     try {
       // Try direct by ID first (UUID format)
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);

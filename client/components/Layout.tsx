@@ -12,7 +12,7 @@ import {
   LayoutDashboard, ClipboardList, PenTool, Cpu, Paintbrush, Workflow,
   ShieldCheck, Calculator, Truck, Package, BarChart3,
   Menu, ChevronLeft, LogOut, User, Settings,
-  Stethoscope, Users, ScrollText, FileText, Bell, AlertTriangle, QrCode,
+  Stethoscope, Users, ScrollText, FileText, Bell, AlertTriangle, QrCode, Fingerprint,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -38,6 +38,7 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { path: "/", label: "لوحة التحكم", icon: LayoutDashboard },
       { path: "/barcode", label: "الباركود و QR", icon: QrCode },
+      { path: "/attendance", label: "الحضور والرواتب", icon: Fingerprint, roles: ["admin", "accountant"] },
     ],
   },
   {

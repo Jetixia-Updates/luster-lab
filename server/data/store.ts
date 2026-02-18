@@ -9,7 +9,8 @@
 import type {
   User, Doctor, Patient, DentalCase, InventoryItem, InventoryTransaction,
   Invoice, Payment, Delivery, AuditLog, PricingRule, WorkflowStep,
-  Supplier, PurchaseOrder,
+  Supplier, PurchaseOrder, BarcodeLabel, BarcodeLog,
+  AttendanceRecord, PayrollPeriod, PayrollEntry,
 } from "@shared/api";
 import type { Expense } from "@shared/api";
 import * as repo from "../db/repository";
@@ -31,6 +32,11 @@ export let purchaseOrders: PurchaseOrder[] = [];
 export let pricingRules: PricingRule[] = [];
 export let auditLogs: AuditLog[] = [];
 export let deliveries: Delivery[] = [];
+export let barcodeLabels: BarcodeLabel[] = [];
+export let barcodeLogs: BarcodeLog[] = [];
+export let attendanceRecords: AttendanceRecord[] = [];
+export let payrollPeriods: PayrollPeriod[] = [];
+export let payrollEntries: PayrollEntry[] = [];
 
 // ========================================
 // ID GENERATORS (persisted to DB counters)
@@ -93,6 +99,11 @@ export const persistPurchaseOrder = (item: PurchaseOrder) => repo.savePurchaseOr
 export const persistPricingRule = (item: PricingRule) => repo.savePricingRule(item).catch(e => console.error("[DB] savePricingRule error:", e));
 export const persistAuditLog = (item: AuditLog) => repo.saveAuditLog(item).catch(e => console.error("[DB] saveAuditLog error:", e));
 export const persistDelivery = (item: Delivery) => repo.saveDelivery(item).catch(e => console.error("[DB] saveDelivery error:", e));
+export const persistBarcodeLabel = (item: BarcodeLabel) => repo.saveBarcodeLabel(item).catch(e => console.error("[DB] saveBarcodeLabel error:", e));
+export const persistBarcodeLog = (item: BarcodeLog) => repo.saveBarcodeLog(item).catch(e => console.error("[DB] saveBarcodeLog error:", e));
+export const persistAttendanceRecord = (item: AttendanceRecord) => repo.saveAttendanceRecord(item).catch(e => console.error("[DB] saveAttendance error:", e));
+export const persistPayrollPeriod = (item: PayrollPeriod) => repo.savePayrollPeriod(item).catch(e => console.error("[DB] savePayrollPeriod error:", e));
+export const persistPayrollEntry = (item: PayrollEntry) => repo.savePayrollEntry(item).catch(e => console.error("[DB] savePayrollEntry error:", e));
 
 // Delete helpers
 export const removeUserFromDB = (id: string) => repo.deleteUser(id).catch(e => console.error("[DB] deleteUser error:", e));
@@ -101,20 +112,23 @@ export const removeCaseFromDB = (id: string) => repo.deleteCase(id).catch(e => c
 export const removeInventoryItemFromDB = (id: string) => repo.deleteInventoryItem(id).catch(e => console.error("[DB] deleteInvItem error:", e));
 export const removeExpenseFromDB = (id: string) => repo.deleteExpense(id).catch(e => console.error("[DB] deleteExpense error:", e));
 export const removeSupplierFromDB = (id: string) => repo.deleteSupplierDB(id).catch(e => console.error("[DB] deleteSupplier error:", e));
+export const removeBarcodeLabelFromDB = (id: string) => repo.deleteBarcodeLabel(id).catch(e => console.error("[DB] deleteBarcodeLabel error:", e));
+export const removeAttendanceRecordFromDB = (id: string) => repo.deleteAttendanceRecord(id).catch(e => console.error("[DB] deleteAttendance error:", e));
 
 // ========================================
 // SEED DATA (used on first boot when DB empty)
 // ========================================
 
 const SEED_USERS: User[] = [
-  { id: "user_1", username: "admin", password: "admin123", fullName: "System Admin", fullNameAr: "مدير النظام", email: "admin@luster.com", role: "admin", department: "management", phone: "+20123456789", active: true, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
-  { id: "user_2", username: "reception1", password: "pass123", fullName: "Sara Ahmed", fullNameAr: "سارة أحمد", email: "sara@luster.com", role: "receptionist", department: "reception", phone: "+20111111111", active: true, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
+  { id: "user_1", username: "admin", password: "admin123", fullName: "System Admin", fullNameAr: "مدير النظام", email: "admin@luster.com", role: "admin", department: "management", phone: "+20123456789", active: true, baseSalary: 8000, fingerprintId: "1", createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
+  { id: "user_2", username: "reception1", password: "pass123", fullName: "Sara Ahmed", fullNameAr: "سارة أحمد", email: "sara@luster.com", role: "receptionist", department: "reception", phone: "+20111111111", active: true, baseSalary: 4500, fingerprintId: "2", createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
   { id: "user_3", username: "designer1", password: "pass123", fullName: "Mohamed Ali", fullNameAr: "محمد علي", email: "mohamed@luster.com", role: "designer", department: "cad", phone: "+20222222222", active: true, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
   { id: "user_4", username: "tech1", password: "pass123", fullName: "Ahmed Hassan", fullNameAr: "أحمد حسن", email: "ahmed.h@luster.com", role: "technician", department: "cam", phone: "+20333333333", active: true, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
   { id: "user_5", username: "tech2", password: "pass123", fullName: "Fatma Nour", fullNameAr: "فاطمة نور", email: "fatma@luster.com", role: "technician", department: "finishing", phone: "+20444444444", active: true, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
   { id: "user_6", username: "qc1", password: "pass123", fullName: "Dr. Khaled Youssef", fullNameAr: "د. خالد يوسف", email: "khaled@luster.com", role: "qc_manager", department: "quality_control", phone: "+20555555555", active: true, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
   { id: "user_7", username: "accountant1", password: "pass123", fullName: "Nadia Ibrahim", fullNameAr: "نادية إبراهيم", email: "nadia@luster.com", role: "accountant", department: "accounting", phone: "+20666666666", active: true, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
   { id: "user_8", username: "delivery1", password: "pass123", fullName: "Omar Saeed", fullNameAr: "عمر سعيد", email: "omar@luster.com", role: "delivery_staff", department: "delivery", phone: "+20777777777", active: true, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
+  { id: "user_kiosk", username: "biosma", password: "biosma123", fullName: "Kiosk", fullNameAr: "محطة البصمة", email: "kiosk@luster.com", role: "receptionist", department: "reception", phone: "", active: true, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
 ];
 
 const SEED_DOCTORS: Doctor[] = [
@@ -312,6 +326,26 @@ export async function initializeStore(): Promise<void> {
 
     // Load all collections (seed if empty)
     users = await seedCollection(repo.loadUsers<User>, repo.saveUser, SEED_USERS, "Users");
+    // Ensure kiosk user (biosma) always exists for fingerprint station
+    if (!users.find((u) => u.username === "biosma")) {
+      const kioskUser = SEED_USERS.find((u) => u.username === "biosma") || {
+        id: "user_kiosk",
+        username: "biosma",
+        password: "biosma123",
+        fullName: "Kiosk",
+        fullNameAr: "محطة البصمة",
+        email: "kiosk@luster.com",
+        role: "receptionist" as const,
+        department: "reception",
+        phone: "",
+        active: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      users.push(kioskUser);
+      await repo.saveUser(kioskUser);
+      console.log("  ✓ Kiosk user (biosma / biosma123) ensured");
+    }
     doctors = await seedCollection(repo.loadDoctors<Doctor>, repo.saveDoctor, SEED_DOCTORS, "Doctors");
     patients = await seedCollection(repo.loadPatients<Patient>, repo.savePatient, SEED_PATIENTS, "Patients");
     cases = await seedCollection(repo.loadCases<DentalCase>, repo.saveCase, SEED_CASES, "Cases");
@@ -324,6 +358,26 @@ export async function initializeStore(): Promise<void> {
     purchaseOrders = await seedCollection(repo.loadPurchaseOrders<PurchaseOrder>, repo.savePurchaseOrder, SEED_POS, "Purchase Orders");
     auditLogs = await seedCollection(repo.loadAuditLogs<AuditLog>, repo.saveAuditLog, SEED_AUDIT, "Audit Logs");
     deliveries = await seedCollection(repo.loadDeliveries<Delivery>, repo.saveDelivery, [], "Deliveries");
+
+    try {
+      barcodeLabels = await repo.loadBarcodeLabels<BarcodeLabel>();
+      barcodeLogs = await repo.loadBarcodeLogs<BarcodeLog>();
+      console.log(`  ✓ Barcode: ${barcodeLabels.length} labels, ${barcodeLogs.length} logs`);
+    } catch (e) {
+      console.log("  ◌ Barcode: tables may not exist yet (run migrations), using empty");
+      barcodeLabels = [];
+      barcodeLogs = [];
+    }
+    try {
+      attendanceRecords = await repo.loadAttendanceRecords<AttendanceRecord>();
+      payrollPeriods = await repo.loadPayrollPeriods<PayrollPeriod>();
+      payrollEntries = await repo.loadPayrollEntries<PayrollEntry>();
+      console.log(`  ✓ Attendance: ${attendanceRecords.length} records, Payroll: ${payrollPeriods.length} periods`);
+    } catch (e) {
+      attendanceRecords = [];
+      payrollPeriods = [];
+      payrollEntries = [];
+    }
 
     // Save initial counters
     if (Object.keys(dbCounters).length === 0) {
@@ -354,6 +408,11 @@ export async function initializeStore(): Promise<void> {
     purchaseOrders = [...SEED_POS];
     auditLogs = [...SEED_AUDIT];
     deliveries = [];
+    barcodeLabels = [];
+    barcodeLogs = [];
+    attendanceRecords = [];
+    payrollPeriods = [];
+    payrollEntries = [];
     initialized = true;
   }
 }

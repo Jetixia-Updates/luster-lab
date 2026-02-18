@@ -26,6 +26,8 @@ import DoctorStatement from "@/pages/DoctorStatement";
 import DeliveryReceipt from "@/pages/DeliveryReceipt";
 import SuppliersPage from "@/pages/Suppliers";
 import BarcodeModule from "@/pages/BarcodeModule";
+import AttendanceModule from "@/pages/AttendanceModule";
+import KioskGate from "@/pages/KioskGate";
 import NotFound from "@/pages/NotFound";
 
 function ProtectedRoutes() {
@@ -89,6 +91,7 @@ function ProtectedRoutes() {
         <Route path="/invoices/:id/print" element={<InvoicePrint />} />
         <Route path="/cases/:id/print" element={<CasePrint />} />
         <Route path="/barcode" element={<BarcodeModule />} />
+        <Route path="/attendance" element={<AttendanceModule />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
@@ -98,8 +101,9 @@ function ProtectedRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
+        <Route path="/attendance/kiosk" element={<KioskGate />} />
         <Route path="/*" element={<ProtectedRoutes />} />
       </Routes>
     </BrowserRouter>

@@ -3,13 +3,14 @@
  */
 
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Lock, User, Eye, EyeOff, Loader2, Fingerprint } from "lucide-react";
 
 export default function Login() {
   const { login } = useAuth();
@@ -110,6 +111,15 @@ export default function Login() {
               </Button>
             </form>
 
+            {/* Kiosk link - دخول مباشر للموظفين */}
+            <Link
+              to="/attendance/kiosk"
+              className="mt-4 flex items-center justify-center gap-2 py-3 rounded-lg bg-indigo-500/20 border border-indigo-400/30 text-indigo-200 hover:bg-indigo-500/30 hover:text-white transition-colors text-sm"
+            >
+              <Fingerprint className="w-4 h-4" />
+              محطة البصمة (دخول مباشر للموظفين)
+            </Link>
+
             {/* Quick login hints */}
             <div className="mt-6 pt-4 border-t border-white/10">
               <p className="text-xs text-blue-200/40 text-center mb-3">حسابات تجريبية:</p>
@@ -121,6 +131,7 @@ export default function Login() {
                   { user: "tech1", pass: "pass123", label: "الفني" },
                   { user: "qc1", pass: "pass123", label: "الجودة" },
                   { user: "accountant1", pass: "pass123", label: "المحاسب" },
+                  { user: "biosma", pass: "biosma123", label: "محطة البصمة" },
                 ].map((acc) => (
                   <button
                     key={acc.user}
