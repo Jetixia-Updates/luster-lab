@@ -1,7 +1,7 @@
 /**
  * Finishing & Coloring Department - Full Workflow with Stages
  * ===========================================================
- * مراحل التشطيب والتلوين الكاملة:
+ * مراحل البورسلين الكاملة:
  * - استقبال القطعة
  * - التنظيف الابتدائي
  * - التلوين الأساسي
@@ -115,7 +115,7 @@ export default function Finishing() {
         qualityScore,
         startTime: selectedCase.finishingData?.startTime || new Date().toISOString(),
       });
-      toast.success("تم حفظ بيانات التشطيب");
+      toast.success("تم حفظ بيانات البورسلين");
       loadCases();
     } catch (err: any) {
       toast.error(err?.message || "خطأ");
@@ -156,9 +156,9 @@ export default function Finishing() {
       });
       await api.post<any>(`/cases/${selectedCase.id}/transfer`, {
         toStatus: "quality_control",
-        notes: "التشطيب مكتمل - تحويل لمراقبة الجودة",
+        notes: "البورسلين مكتمل - تحويل لمراقبة الجودة",
       });
-      toast.success("تم إكمال التشطيب والتحويل لمراقبة الجودة");
+      toast.success("تم إكمال البورسلين والتحويل لمراقبة الجودة");
       setViewMode("list");
       loadCases();
     } catch (err: any) {
@@ -181,7 +181,7 @@ export default function Finishing() {
         firingCycles: 0,
         coloringStages: [],
       });
-      toast.success("تم بدء التشطيب");
+      toast.success("تم بدء البورسلين");
       openWorkspace({
         ...c,
         finishingData: {
@@ -299,7 +299,7 @@ export default function Finishing() {
               </CardContent>
             </Card>
             <Button className="w-full gap-2 bg-green-600 hover:bg-green-700" onClick={handleTransferToQC}>
-              <Send className="w-4 h-4" /> إنهاء التشطيب وتحويل لمراقبة الجودة
+              <Send className="w-4 h-4" /> إنهاء البورسلين وتحويل لمراقبة الجودة
             </Button>
 
             <Card>
@@ -307,7 +307,7 @@ export default function Finishing() {
                 <CardTitle className="text-xs">ملاحظات</CardTitle>
               </CardHeader>
               <CardContent className="px-3 pb-3">
-                <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="ملاحظات التشطيب..." className="text-xs min-h-[80px] resize-none" />
+                <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="ملاحظات البورسلين..." className="text-xs min-h-[80px] resize-none" />
               </CardContent>
             </Card>
           </div>
@@ -315,7 +315,7 @@ export default function Finishing() {
           <div className="flex-1 flex flex-col gap-3 min-h-0">
             <Card className="flex-1 flex flex-col items-center justify-center bg-gradient-to-b from-amber-50 to-yellow-50">
               <Paintbrush className="w-24 h-24 text-yellow-500 opacity-50 mb-4" />
-              <p className="text-lg font-bold text-yellow-700">قسم التشطيب والتلوين</p>
+              <p className="text-lg font-bold text-yellow-700">قسم البورسلين</p>
               <p className="text-sm text-muted-foreground mt-1">{selectedCase.caseNumber} • {WORK_TYPE_LABELS[selectedCase.workType]?.ar}</p>
               <Badge variant="outline" className="mt-3 gap-1">
                 <span>اللون المستهدف: {selectedCase.shadeColor}</span>
@@ -346,9 +346,9 @@ export default function Finishing() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Paintbrush className="w-7 h-7 text-yellow-600" />
-            قسم التشطيب والتلوين
+            قسم البورسلين
           </h1>
-          <p className="text-muted-foreground">التلوين والحرق والتشطيب النهائي - جميع مراحل العمل</p>
+          <p className="text-muted-foreground">البورسلين والحرق والتشطيب النهائي - جميع مراحل العمل</p>
         </div>
         <ScanCaseButton variant="outline" />
       </div>
@@ -384,7 +384,7 @@ export default function Finishing() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Workflow className="w-5 h-5 text-yellow-600" />
-            حالات التشطيب
+            حالات البورسلين
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -393,7 +393,7 @@ export default function Finishing() {
           ) : cases.length === 0 ? (
             <div className="text-center py-12">
               <Paintbrush className="w-16 h-16 text-gray-300 mx-auto mb-3" />
-              <p className="text-lg font-bold text-gray-400">لا توجد حالات في التشطيب</p>
+              <p className="text-lg font-bold text-gray-400">لا توجد حالات في البورسلين</p>
               <p className="text-sm text-gray-400">الحالات المحولة من التفريز ستظهر هنا</p>
             </div>
           ) : (
@@ -439,7 +439,7 @@ export default function Finishing() {
                           {fd?.status === "in_progress" ? (
                             <><Paintbrush className="w-3 h-3" /> فتح محطة العمل</>
                           ) : (
-                            <><Play className="w-3 h-3" /> {fd ? "فتح محطة العمل" : "بدء التشطيب"}</>
+                            <><Play className="w-3 h-3" /> {fd ? "فتح محطة العمل" : "بدء البورسلين"}</>
                           )}
                         </Button>
                       )}

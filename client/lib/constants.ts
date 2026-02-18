@@ -11,7 +11,7 @@ export const STATUS_LABELS: Record<CaseStatus, { en: string; ar: string; color: 
   reception: { en: "Reception", ar: "الاستقبال", color: "bg-blue-100 text-blue-800" },
   cad_design: { en: "CAD Design", ar: "التصميم", color: "bg-purple-100 text-purple-800" },
   cam_milling: { en: "CAM/Milling", ar: "التفريز", color: "bg-orange-100 text-orange-800" },
-  finishing: { en: "Finishing", ar: "التشطيب والتلوين", color: "bg-yellow-100 text-yellow-800" },
+  finishing: { en: "Porcelain", ar: "البورسلين", color: "bg-yellow-100 text-yellow-800" },
   removable: { en: "Removable Prosthetics", ar: "التركيبات المتحركة", color: "bg-teal-100 text-teal-800" },
   quality_control: { en: "Quality Control", ar: "مراقبة الجودة", color: "bg-cyan-100 text-cyan-800" },
   accounting: { en: "Accounting", ar: "الحسابات", color: "bg-green-100 text-green-800" },

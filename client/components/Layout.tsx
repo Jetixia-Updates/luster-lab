@@ -12,7 +12,7 @@ import {
   LayoutDashboard, ClipboardList, PenTool, Cpu, Paintbrush, Workflow,
   ShieldCheck, Calculator, Truck, Package, BarChart3,
   Menu, ChevronLeft, LogOut, User, Settings,
-  Stethoscope, Users, ScrollText, FileText, Bell, AlertTriangle, QrCode, Fingerprint,
+  Stethoscope, Users, ScrollText, FileText, Bell, AlertTriangle, QrCode, Fingerprint, Briefcase,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -47,7 +47,7 @@ const NAV_SECTIONS: NavSection[] = [
       { path: "/reception", label: "الاستقبال", icon: ClipboardList, roles: ["admin", "receptionist"] },
       { path: "/cad", label: "التصميم CAD", icon: PenTool, roles: ["admin", "designer"] },
       { path: "/cam", label: "التفريز CAM", icon: Cpu, roles: ["admin", "technician"] },
-      { path: "/finishing", label: "التشطيب والتلوين", icon: Paintbrush, roles: ["admin", "technician"] },
+      { path: "/finishing", label: "البورسلين", icon: Paintbrush, roles: ["admin", "technician"] },
       { path: "/removable", label: "التركيبات المتحركة", icon: Workflow, roles: ["admin", "technician"] },
       { path: "/qc", label: "مراقبة الجودة", icon: ShieldCheck, roles: ["admin", "qc_manager"] },
       { path: "/delivery", label: "التسليم", icon: Truck, roles: ["admin", "delivery_staff"] },
@@ -62,6 +62,7 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: "إدارة",
     items: [
+      { path: "/hr", label: "الموارد البشرية", icon: Briefcase, roles: ["admin"] },
       { path: "/cases", label: "جميع الحالات", icon: FileText },
       { path: "/doctors", label: "الأطباء", icon: Stethoscope, roles: ["admin", "receptionist", "accountant"] },
       { path: "/patients", label: "المرضى", icon: Users, roles: ["admin", "receptionist"] },

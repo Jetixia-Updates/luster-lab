@@ -48,7 +48,7 @@ import {
   getBarcodeLogs, logBarcodeAction,
 } from "./routes/barcode";
 import {
-  getAttendance, createAttendance, importAttendanceCSV, punchAttendance, getTodayStatus, getKioskData,
+  getAttendance, getAttendanceReport, getAttendanceReports, createAttendance, importAttendanceCSV, punchAttendance, getTodayStatus, getKioskData,
   updateAttendance, deleteAttendance,
   getPayrollPeriods, getPayrollPeriod, createPayrollPeriod, updatePayrollStatus, updatePayrollEntry,
 } from "./routes/attendance";
@@ -58,6 +58,11 @@ import {
   createExpenseFromPO,
   getCostAnalysis, getMaterialProfitability, getPurchaseVsSales, getSupplierBalances,
 } from "./routes/suppliers";
+import {
+  getHRNeeds, createHRNeed, updateHRNeed, deleteHRNeed,
+  getHRPositions, createHRPosition, updateHRPosition, deleteHRPosition,
+  getHRApplications, createHRApplication, updateHRApplication, deleteHRApplication,
+} from "./routes/hr";
 
 export { initializeStore };
 
@@ -194,6 +199,8 @@ export function createServer() {
 
   // ── Attendance & Payroll ────────────────────────
   app.get("/api/attendance", getAttendance);
+  app.get("/api/attendance/report", getAttendanceReport);
+  app.get("/api/attendance/reports", getAttendanceReports);
   app.get("/api/attendance/today", getTodayStatus);
   app.post("/api/attendance", createAttendance);
   app.post("/api/attendance/import", importAttendanceCSV);
@@ -204,6 +211,20 @@ export function createServer() {
   app.post("/api/payroll/periods", createPayrollPeriod);
   app.put("/api/payroll/periods/:id/status", updatePayrollStatus);
   app.put("/api/payroll/entries/:id", updatePayrollEntry);
+
+  // ── HR Module ────────────────────────────────────
+  app.get("/api/hr/needs", getHRNeeds);
+  app.post("/api/hr/needs", createHRNeed);
+  app.put("/api/hr/needs/:id", updateHRNeed);
+  app.delete("/api/hr/needs/:id", deleteHRNeed);
+  app.get("/api/hr/positions", getHRPositions);
+  app.post("/api/hr/positions", createHRPosition);
+  app.put("/api/hr/positions/:id", updateHRPosition);
+  app.delete("/api/hr/positions/:id", deleteHRPosition);
+  app.get("/api/hr/applications", getHRApplications);
+  app.post("/api/hr/applications", createHRApplication);
+  app.put("/api/hr/applications/:id", updateHRApplication);
+  app.delete("/api/hr/applications/:id", deleteHRApplication);
 
   // ── Dashboard & Reports ──────────────────────────
   app.get("/api/dashboard/stats", getDashboardStats);

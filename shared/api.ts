@@ -162,6 +162,10 @@ export interface User {
   faceDescriptor?: number[]; // واصف الوجه للتعرف بالوجه (128 رقم)
   baseSalary?: number;      // الراتب الأساسي
   hireDate?: string;
+  /** وقت بداية العمل الرسمي HH:mm - للربط مع البصمة */
+  workStartTime?: string;
+  /** وقت نهاية العمل الرسمي HH:mm */
+  workEndTime?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -213,6 +217,90 @@ export interface PayrollEntry {
   netSalary: number;
   notes?: string;
   createdAt: string;
+}
+
+/** تقرير حضور موظف - مرتبط بوقت العمل */
+export interface EmployeeAttendanceReport {
+  userId: string;
+  userName: string;
+  from: string;
+  to: string;
+  workStartTime: string;
+  workEndTime: string;
+  days: EmployeeAttendanceDay[];
+  totalPresentDays: number;
+  totalAbsentDays: number;
+  totalLateMinutes: number;
+  totalOvertimeMinutes: number;
+  avgLateMinutes: number;
+  avgOvertimeMinutes: number;
+}
+
+export interface EmployeeAttendanceDay {
+  date: string;
+  checkIn: string | null;
+  checkOut: string | null;
+  lateMinutes: number;
+  overtimeMinutes: number;
+  workMinutes: number;
+  present: boolean;
+}
+
+// ========================================
+// HR MODULE - الموارد البشرية
+// ========================================
+
+export type HRDepartment = "reception" | "cad" | "cam" | "finishing" | "removable" | "quality_control" | "accounting" | "delivery" | "management";
+
+export type HRNeedStatus = "open" | "filled" | "cancelled";
+export type HRApplicationStatus = "new" | "screening" | "interview" | "offer" | "hired" | "rejected";
+
+export interface HRDepartmentNeed {
+  id: string;
+  department: HRDepartment;
+  departmentNameAr: string;
+  positionTitle: string;
+  positionTitleAr: string;
+  requiredCount: number;
+  filledCount: number;
+  description?: string;
+  skills?: string[];
+  minExperience?: string;
+  salaryRange?: string;
+  status: HRNeedStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HRJobPosition {
+  id: string;
+  needId?: string;
+  department: HRDepartment;
+  title: string;
+  titleAr: string;
+  description?: string;
+  requirements?: string[];
+  status: "open" | "filled" | "cancelled";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HRApplication {
+  id: string;
+  positionId: string;
+  positionTitle: string;
+  department: string;
+  applicantName: string;
+  applicantNameAr: string;
+  phone: string;
+  email?: string;
+  resumeNotes?: string;
+  experience?: string;
+  education?: string;
+  status: HRApplicationStatus;
+  appliedAt: string;
+  notes?: string;
+  updatedAt: string;
 }
 
 export interface AuthLoginRequest {

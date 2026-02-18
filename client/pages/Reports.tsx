@@ -20,7 +20,7 @@ import type { DepartmentPerformance, RevenueReport } from "@shared/api";
 
 const DEPT_NAMES: Record<string, string> = {
   reception: "الاستقبال", cad: "التصميم", cam: "التفريز",
-  finishing: "التشطيب", quality_control: "الجودة", accounting: "الحسابات", delivery: "التسليم",
+  finishing: "البورسلين", quality_control: "الجودة", accounting: "الحسابات", delivery: "التسليم",
 };
 
 const WORK_AR: Record<string, string> = {

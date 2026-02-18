@@ -45,7 +45,7 @@ export const getUsers: RequestHandler = (_req, res) => {
 
 export const createUser: RequestHandler = (req, res) => {
   const currentUser = (req as any).user;
-  const { username, password, fullName, fullNameAr, email, role, department, phone, fingerprintId, baseSalary } = req.body;
+  const { username, password, fullName, fullNameAr, email, role, department, phone, fingerprintId, baseSalary, workStartTime, workEndTime } = req.body;
 
   if (users.find((u) => u.username === username)) {
     return res.status(400).json({ success: false, error: "اسم المستخدم موجود بالفعل" });
@@ -64,6 +64,8 @@ export const createUser: RequestHandler = (req, res) => {
     active: true,
     fingerprintId: fingerprintId?.trim() || undefined,
     baseSalary: baseSalary != null ? Number(baseSalary) : undefined,
+    workStartTime: workStartTime || undefined,
+    workEndTime: workEndTime || undefined,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };

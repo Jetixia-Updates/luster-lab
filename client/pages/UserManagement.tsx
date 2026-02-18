@@ -39,7 +39,7 @@ const DEPARTMENT_OPTIONS = [
   { value: "reception", label: "الاستقبال" },
   { value: "cad", label: "التصميم" },
   { value: "cam", label: "CAM" },
-  { value: "finishing", label: "التشطيب" },
+  { value: "finishing", label: "البورسلين" },
   { value: "qc", label: "الجودة" },
   { value: "accounting", label: "الحسابات" },
   { value: "delivery", label: "التسليم" },
@@ -49,6 +49,7 @@ const emptyForm = {
   username: "", fullNameAr: "", fullName: "", email: "",
   role: "technician" as UserRole, department: "reception",
   phone: "", password: "", fingerprintId: "", baseSalary: "",
+  workStartTime: "09:00", workEndTime: "17:00",
 };
 
 export default function UserManagement() {
@@ -92,12 +93,15 @@ export default function UserManagement() {
   };
 
   const openEdit = (user: Omit<User, "password">) => {
+    const u = user as User;
     setForm({
       username: user.username, fullNameAr: user.fullNameAr, fullName: user.fullName,
       email: user.email, role: user.role, department: user.department,
       phone: user.phone || "", password: "",
-      fingerprintId: (user as User).fingerprintId || "",
-      baseSalary: (user as User).baseSalary != null ? String((user as User).baseSalary) : "",
+      fingerprintId: u.fingerprintId || "",
+      baseSalary: u.baseSalary != null ? String(u.baseSalary) : "",
+      workStartTime: u.workStartTime || "09:00",
+      workEndTime: u.workEndTime || "17:00",
     });
     setEditingUser(user);
     setShowPassword(false);
@@ -120,12 +124,16 @@ export default function UserManagement() {
         if (!payload.password) delete payload.password;
         payload.fingerprintId = form.fingerprintId?.trim() || undefined;
         payload.baseSalary = form.baseSalary ? parseFloat(form.baseSalary) : undefined;
+        payload.workStartTime = form.workStartTime || undefined;
+        payload.workEndTime = form.workEndTime || undefined;
         await api.put<any>(`/users/${editingUser.id}`, payload);
         toast.success("تم تحديث المستخدم بنجاح");
       } else {
         const createPayload: any = { ...form };
         createPayload.fingerprintId = form.fingerprintId?.trim() || undefined;
         createPayload.baseSalary = form.baseSalary ? parseFloat(form.baseSalary) : undefined;
+        createPayload.workStartTime = form.workStartTime || undefined;
+        createPayload.workEndTime = form.workEndTime || undefined;
         await api.post<any>("/users", createPayload);
         toast.success("تم إنشاء المستخدم بنجاح");
       }
@@ -401,6 +409,19 @@ export default function UserManagement() {
                 <Label>الراتب الأساسي (ج.م)</Label>
                 <Input type="number" value={form.baseSalary} onChange={(e) => setForm({ ...form, baseSalary: e.target.value })}
                   placeholder="5000" dir="ltr" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>وقت بداية العمل (للربط مع البصمة)</Label>
+                <Input type="time" value={form.workStartTime} onChange={(e) => setForm({ ...form, workStartTime: e.target.value })}
+                  dir="ltr" />
+              </div>
+              <div>
+                <Label>وقت نهاية العمل</Label>
+                <Input type="time" value={form.workEndTime} onChange={(e) => setForm({ ...form, workEndTime: e.target.value })}
+                  dir="ltr" />
               </div>
             </div>
 

@@ -11,7 +11,7 @@
  * - إخراج القطعة
  * - تنظيف وتجهيز
  * - فحص أولي
- * - تحويل للتشطيب
+ * - تحويل للبورسلين
  */
 
 import { useEffect, useState } from "react";
@@ -200,8 +200,8 @@ export default function CAMDepartment() {
         inspectionPassed,
         inspectionNotes,
       });
-      await api.post<any>(`/cases/${selectedCase.id}/transfer`, { toStatus: "finishing", notes: "CAM مكتمل - تحويل للتشطيب" });
-      toast.success(`تم إكمال التفريز والتحويل للتشطيب (${duration} دقيقة)`);
+      await api.post<any>(`/cases/${selectedCase.id}/transfer`, { toStatus: "finishing", notes: "CAM مكتمل - تحويل للبورسلين" });
+      toast.success(`تم إكمال التفريز والتحويل للبورسلين (${duration} دقيقة)`);
       setViewMode("list");
       reload();
     } catch (err: any) {
@@ -216,7 +216,7 @@ export default function CAMDepartment() {
         toStatus: "finishing",
         notes: "CAM completed - transferred to finishing",
       });
-      toast.success("تم تحويل الحالة للتشطيب");
+      toast.success("تم تحويل الحالة للبورسلين");
       setViewMode("list");
       reload();
     } catch (err: any) {
@@ -292,7 +292,7 @@ export default function CAMDepartment() {
               حفظ
             </Button>
             <Button size="sm" className="bg-green-600 hover:bg-green-700 gap-1 text-xs" onClick={completeCAM}>
-              <CheckCircle className="w-3 h-3" /> إنهاء التفريز وتحويل للتشطيب
+              <CheckCircle className="w-3 h-3" /> إنهاء التفريز وتحويل للبورسلين
             </Button>
           </div>
         </div>
@@ -527,11 +527,11 @@ export default function CAMDepartment() {
                         <Button size="sm" className="gap-1 bg-green-600 hover:bg-green-700" onClick={async () => {
                           try {
                             await api.post<any>(`/cases/${c.id}/transfer`, { toStatus: "finishing", notes: "CAM completed" });
-                            toast.success("تم تحويل الحالة للتشطيب");
+                            toast.success("تم تحويل الحالة للبورسلين");
                             reload();
                           } catch (err: any) { toast.error(err.message); }
                         }}>
-                          <Send className="w-3 h-3" /> تحويل للتشطيب
+                          <Send className="w-3 h-3" /> تحويل للبورسلين
                         </Button>
                       )}
                     </div>

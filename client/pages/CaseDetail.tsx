@@ -208,7 +208,7 @@ export default function CaseDetail() {
 
           {c.finishingData && (
             <Card className="border-yellow-200">
-              <CardHeader className="py-3"><CardTitle className="text-sm text-yellow-700 flex items-center gap-1"><Paintbrush className="w-3.5 h-3.5" /> بيانات التشطيب</CardTitle></CardHeader>
+              <CardHeader className="py-3"><CardTitle className="text-sm text-yellow-700 flex items-center gap-1"><Paintbrush className="w-3.5 h-3.5" /> بيانات البورسلين</CardTitle></CardHeader>
               <CardContent className="pt-0 space-y-1.5 text-sm">
                 <p>الفني: <strong>{c.finishingData.technicianName}</strong></p>
                 {c.finishingData.furnaceName && <p>الفرن: {c.finishingData.furnaceName}</p>}

@@ -389,6 +389,15 @@ export async function initializeStore(): Promise<void> {
       await repo.saveCounter("poCounter", poCounter);
     }
 
+    // HR module (file-based)
+    try {
+      const { initHRStore } = await import("./hr-store");
+      initHRStore();
+      console.log("  ✓ HR: store initialized");
+    } catch (e) {
+      console.log("  ◌ HR: store init skipped");
+    }
+
     initialized = true;
     console.log("\n  ✅ Database initialization complete!\n");
   } catch (error) {

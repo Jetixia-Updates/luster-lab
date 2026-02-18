@@ -15,7 +15,176 @@ import {
   persistPayrollEntry,
   removeAttendanceRecordFromDB,
 } from "../data/store";
-import type { AttendanceRecord, PayrollEntry, PayrollPeriod } from "@shared/api";
+import type {
+  AttendanceRecord,
+  PayrollEntry,
+  PayrollPeriod,
+  EmployeeAttendanceReport,
+  EmployeeAttendanceDay,
+} from "@shared/api";
+
+const DEFAULT_WORK_START = "09:00";
+const DEFAULT_WORK_END = "17:00";
+
+function parseTime(t: string): number {
+  if (!t || t.length < 5) return 0;
+  const [h, m] = t.split(":").map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
+
+// GET /api/attendance/report - تقرير حضور موظف (حضور، انصراف، وقت إضافي، تأخير)
+export const getAttendanceReport: RequestHandler = (req, res) => {
+  const { userId, from, to } = req.query;
+  if (!userId || !from || !to) {
+    return res.status(400).json({ success: false, error: "userId, from, to مطلوبة" });
+  }
+  const user = users.find((u) => u.id === userId);
+  if (!user) return res.status(404).json({ success: false, error: "الموظف غير موجود" });
+
+  const workStart = user.workStartTime || DEFAULT_WORK_START;
+  const workEnd = user.workEndTime || DEFAULT_WORK_END;
+  const workStartMins = parseTime(workStart);
+  const workEndMins = parseTime(workEnd);
+  const workDayMins = workEndMins > workStartMins ? workEndMins - workStartMins : (24 * 60 - workStartMins) + workEndMins;
+
+  const recs = attendanceRecords.filter(
+    (a) => a.userId === userId && a.date >= (from as string) && a.date <= (to as string)
+  );
+  const byDate = new Map<string, AttendanceRecord[]>();
+  for (const r of recs) {
+    if (!byDate.has(r.date)) byDate.set(r.date, []);
+    byDate.get(r.date)!.push(r);
+  }
+
+  const days: EmployeeAttendanceDay[] = [];
+  const fromD = new Date(from as string);
+  const toD = new Date(to as string);
+  for (let d = new Date(fromD); d <= toD; d.setDate(d.getDate() + 1)) {
+    const dateStr = d.toISOString().slice(0, 10);
+    const dayRecs = (byDate.get(dateStr) || []).sort((a, b) => `${a.checkIn || ""}`.localeCompare(`${b.checkIn || ""}`));
+    const checkIn = dayRecs.map((r) => r.checkIn).filter(Boolean).sort()[0] || null;
+    const checkOut = dayRecs.map((r) => r.checkOut).filter(Boolean).pop() || null;
+    const present = dayRecs.length > 0;
+    let lateMinutes = 0;
+    let overtimeMinutes = 0;
+    let workMinutes = 0;
+    if (present && checkIn) {
+      const ci = parseTime(checkIn);
+      if (ci > workStartMins) lateMinutes = ci - workStartMins;
+    }
+    if (present && checkOut) {
+      const co = parseTime(checkOut);
+      if (co > workEndMins) overtimeMinutes = co - workEndMins;
+      const ci = parseTime(checkIn || workStart);
+      workMinutes = Math.max(0, co - ci);
+    }
+    days.push({
+      date: dateStr,
+      checkIn,
+      checkOut,
+      lateMinutes,
+      overtimeMinutes,
+      workMinutes,
+      present,
+    });
+  }
+
+  const totalPresent = days.filter((d) => d.present).length;
+  const totalAbsent = days.filter((d) => !d.present).length;
+  const totalLate = days.reduce((s, d) => s + d.lateMinutes, 0);
+  const totalOvertime = days.reduce((s, d) => s + d.overtimeMinutes, 0);
+
+  const report: EmployeeAttendanceReport = {
+    userId: user.id,
+    userName: user.fullNameAr || user.fullName,
+    from: from as string,
+    to: to as string,
+    workStartTime: workStart,
+    workEndTime: workEnd,
+    days,
+    totalPresentDays: totalPresent,
+    totalAbsentDays: totalAbsent,
+    totalLateMinutes: totalLate,
+    totalOvertimeMinutes: totalOvertime,
+    avgLateMinutes: totalPresent > 0 ? Math.round(totalLate / totalPresent) : 0,
+    avgOvertimeMinutes: totalPresent > 0 ? Math.round(totalOvertime / totalPresent) : 0,
+  };
+  res.json({ success: true, data: report });
+};
+
+// GET /api/attendance/reports - تقارير كل الموظفين
+export const getAttendanceReports: RequestHandler = (req, res) => {
+  const { from, to } = req.query;
+  if (!from || !to) {
+    return res.status(400).json({ success: false, error: "from, to مطلوبة" });
+  }
+  const empIds = [...new Set(attendanceRecords.map((a) => a.userId))];
+  const activeUsers = users.filter((u) => u.active && (u.fingerprintId || empIds.includes(u.id)));
+  const reports: EmployeeAttendanceReport[] = [];
+  for (const u of activeUsers) {
+    const user = users.find((x) => x.id === u.id)!;
+    const workStart = user.workStartTime || DEFAULT_WORK_START;
+    const workEnd = user.workEndTime || DEFAULT_WORK_END;
+    const workStartMins = parseTime(workStart);
+    const workEndMins = parseTime(workEnd);
+
+    const recs = attendanceRecords.filter(
+      (a) => a.userId === u.id && a.date >= (from as string) && a.date <= (to as string)
+    );
+    const byDate = new Map<string, AttendanceRecord[]>();
+    for (const r of recs) {
+      if (!byDate.has(r.date)) byDate.set(r.date, []);
+      byDate.get(r.date)!.push(r);
+    }
+
+    const fromD = new Date(from as string);
+    const toD = new Date(to as string);
+    const days: EmployeeAttendanceDay[] = [];
+    for (let d = new Date(fromD); d <= toD; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().slice(0, 10);
+      const dayRecs = (byDate.get(dateStr) || []).sort((a, b) => `${a.checkIn || ""}`.localeCompare(`${b.checkIn || ""}`));
+      const checkIn = dayRecs.map((r) => r.checkIn).filter(Boolean).sort()[0] || null;
+      const checkOut = dayRecs.map((r) => r.checkOut).filter(Boolean).pop() || null;
+      const present = dayRecs.length > 0;
+      let lateMinutes = 0;
+      let overtimeMinutes = 0;
+      let workMinutes = 0;
+      if (present && checkIn) {
+        const ci = parseTime(checkIn);
+        if (ci > workStartMins) lateMinutes = ci - workStartMins;
+      }
+      if (present && checkOut) {
+        const co = parseTime(checkOut);
+        if (co > workEndMins) overtimeMinutes = co - workEndMins;
+        const ci = parseTime(checkIn || workStart);
+        workMinutes = Math.max(0, co - ci);
+      }
+      days.push({ date: dateStr, checkIn, checkOut, lateMinutes, overtimeMinutes, workMinutes, present });
+    }
+
+    const totalPresent = days.filter((d) => d.present).length;
+    const totalAbsent = days.filter((d) => !d.present).length;
+    const totalLate = days.reduce((s, d) => s + d.lateMinutes, 0);
+    const totalOvertime = days.reduce((s, d) => s + d.overtimeMinutes, 0);
+
+    reports.push({
+      userId: u.id,
+      userName: user.fullNameAr || user.fullName,
+      from: from as string,
+      to: to as string,
+      workStartTime: workStart,
+      workEndTime: workEnd,
+      days,
+      totalPresentDays: totalPresent,
+      totalAbsentDays: totalAbsent,
+      totalLateMinutes: totalLate,
+      totalOvertimeMinutes: totalOvertime,
+      avgLateMinutes: totalPresent > 0 ? Math.round(totalLate / totalPresent) : 0,
+      avgOvertimeMinutes: totalPresent > 0 ? Math.round(totalOvertime / totalPresent) : 0,
+    });
+  }
+  res.json({ success: true, data: reports });
+};
 
 // GET /api/attendance
 export const getAttendance: RequestHandler = (req, res) => {
@@ -288,13 +457,13 @@ export const createPayrollPeriod: RequestHandler = (req, res) => {
     const totalDays = toLast.getDate();
     const absenceDays = Math.max(0, totalDays - daysPresent);
 
+    const workStart = u.workStartTime || DEFAULT_WORK_START;
+    const expectedMins = parseTime(workStart);
     let lateMinutes = 0;
     for (const r of userRecs) {
       if (r.checkIn) {
-        const [h, m] = r.checkIn.split(":").map(Number);
-        const mins = (h || 0) * 60 + (m || 0);
-        const expected = 9 * 60; // 9:00
-        if (mins > expected) lateMinutes += mins - expected;
+        const mins = parseTime(r.checkIn);
+        if (mins > expectedMins) lateMinutes += mins - expectedMins;
       }
     }
 

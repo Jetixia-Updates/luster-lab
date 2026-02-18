@@ -27,6 +27,7 @@ import DeliveryReceipt from "@/pages/DeliveryReceipt";
 import SuppliersPage from "@/pages/Suppliers";
 import BarcodeModule from "@/pages/BarcodeModule";
 import AttendanceModule from "@/pages/AttendanceModule";
+import HRModule from "@/pages/HRModule";
 import KioskGate from "@/pages/KioskGate";
 import NotFound from "@/pages/NotFound";
 
@@ -92,6 +93,7 @@ function ProtectedRoutes() {
         <Route path="/cases/:id/print" element={<CasePrint />} />
         <Route path="/barcode" element={<BarcodeModule />} />
         <Route path="/attendance" element={<AttendanceModule />} />
+        <Route path="/hr" element={<HRModule />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>

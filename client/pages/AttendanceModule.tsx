@@ -17,9 +17,9 @@ import { toast } from "sonner";
 import {
   Users, Clock, DollarSign, Upload, Fingerprint, Plus, Check, X,
   LayoutDashboard, FileSpreadsheet, Edit, Trash2, ExternalLink,
-  LogIn, LogOut, UserCheck, UserX,
+  LogIn, LogOut, UserCheck, UserX, FileBarChart, AlertCircle,
 } from "lucide-react";
-import type { User, AttendanceRecord, PayrollPeriod, PayrollEntry } from "@shared/api";
+import type { User, AttendanceRecord, PayrollPeriod, PayrollEntry, EmployeeAttendanceReport } from "@shared/api";
 
 const MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
 const STATUS_LABELS: Record<string, string> = { draft: "مسودة", approved: "معتمد", paid: "مُصرف" };
@@ -36,7 +36,7 @@ interface TodayStatus {
 }
 
 export default function AttendanceModule() {
-  const [activeTab, setActiveTab] = useState<"dashboard" | "attendance" | "import" | "payroll">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "attendance" | "reports" | "import" | "payroll">("dashboard");
   const [users, setUsers] = useState<User[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [periods, setPeriods] = useState<PayrollPeriod[]>([]);
@@ -62,6 +62,11 @@ export default function AttendanceModule() {
 
   const [importMapping, setImportMapping] = useState({ userId: 0, date: 2, time: 3, punch: 4 });
   const [importPreview, setImportPreview] = useState<string[][]>([]);
+
+  const [reportFrom, setReportFrom] = useState(new Date().toISOString().slice(0, 10));
+  const [reportTo, setReportTo] = useState(new Date().toISOString().slice(0, 10));
+  const [reports, setReports] = useState<EmployeeAttendanceReport[]>([]);
+  const [reportLoading, setReportLoading] = useState(false);
 
   const loadUsers = async () => {
     try {
@@ -105,8 +110,19 @@ export default function AttendanceModule() {
     setInitialLoad(false);
   };
 
+  const loadReports = async () => {
+    setReportLoading(true);
+    try {
+      const r = await api.get<any>(`/attendance/reports?from=${reportFrom}&to=${reportTo}`);
+      setReports(r?.data ?? []);
+    } catch (e: any) {
+      toast.error("فشل تحميل التقارير: " + (e?.message || "خطأ"));
+    } finally { setReportLoading(false); }
+  };
+
   useEffect(() => { loadData(); }, []);
   useEffect(() => { if (activeTab === "dashboard") loadToday(); }, [activeTab]);
+  useEffect(() => { if (activeTab === "reports") loadReports(); }, [activeTab, reportFrom, reportTo]);
 
   const handleManualAttendance = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,9 +141,10 @@ export default function AttendanceModule() {
     if (importPreview.length < 1) { toast.error("اختر ملف أولاً"); return; }
     setLoading(true);
     try {
-      const res = await api.post("/attendance/import", { rows: importPreview, mapping: importMapping });
+      const res = await api.post<{ imported: number; errors?: string[] }>("/attendance/import", { rows: importPreview, mapping: importMapping });
       toast.success(`تم استيراد ${res.imported} سجل`);
-      if (res.errors?.length) toast.warning(`${res.errors.length} أخطاء`);
+      const errs = res.errors;
+      if (errs?.length) toast.warning(`${errs.length} أخطاء`);
       setImportPreview([]);
       loadAttendance();
       loadToday();
@@ -176,10 +193,11 @@ export default function AttendanceModule() {
   const createPeriod = async () => {
     setLoading(true);
     try {
-      const res = await api.post("/payroll/periods", { year: newPeriodYear, month: newPeriodMonth });
+      const res = await api.post<{ success: boolean; data: PayrollPeriod & { entries?: PayrollEntry[] } }>("/payroll/periods", { year: newPeriodYear, month: newPeriodMonth });
+      const data = res.data;
       toast.success("تم إنشاء دورة الرواتب");
-      setSelectedPeriod(res.data);
-      setEntries(res.data.entries || []);
+      setSelectedPeriod(data);
+      setEntries(data?.entries || []);
       loadPeriods();
     } catch (e: any) { toast.error(e?.message || "فشل"); }
     finally { setLoading(false); }
@@ -193,7 +211,7 @@ export default function AttendanceModule() {
     } catch { toast.error("فشل التحميل"); }
   };
 
-  const updateEntryStatus = async (periodId: string, status: string) => {
+  const updateEntryStatus = async (periodId: string, status: "draft" | "approved" | "paid") => {
     try {
       await api.put(`/payroll/periods/${periodId}/status`, { status });
       toast.success("تم التحديث");
@@ -224,9 +242,10 @@ export default function AttendanceModule() {
       </div>
 
       <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-        <TabsList className="grid w-full max-w-2xl grid-cols-4">
+        <TabsList className="grid w-full max-w-2xl grid-cols-5">
           <TabsTrigger value="dashboard" className="gap-1"><LayoutDashboard className="w-4 h-4" /> لوحة التحكم</TabsTrigger>
           <TabsTrigger value="attendance" className="gap-1"><Clock className="w-4 h-4" /> الحضور</TabsTrigger>
+          <TabsTrigger value="reports" className="gap-1"><FileBarChart className="w-4 h-4" /> تقارير</TabsTrigger>
           <TabsTrigger value="import" className="gap-1"><Upload className="w-4 h-4" /> استيراد</TabsTrigger>
           <TabsTrigger value="payroll" className="gap-1"><DollarSign className="w-4 h-4" /> الرواتب</TabsTrigger>
         </TabsList>
@@ -382,6 +401,80 @@ export default function AttendanceModule() {
                 </table>
                 {attendance.length === 0 && <p className="py-8 text-center text-muted-foreground">لا توجد سجلات</p>}
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="reports" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><FileBarChart className="w-5 h-5" /> تقارير الحضور والانصراف</CardTitle>
+              <p className="text-sm text-muted-foreground">تقارير لكل موظف: الحضور، الانصراف، الوقت الإضافي، التأخير - مرتبطة بوقت العمل</p>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3 mb-4">
+                <div><Label>من</Label><Input type="date" value={reportFrom} onChange={(e) => setReportFrom(e.target.value)} className="mt-1" /></div>
+                <div><Label>إلى</Label><Input type="date" value={reportTo} onChange={(e) => setReportTo(e.target.value)} className="mt-1" /></div>
+                <div className="flex items-end"><Button onClick={loadReports} disabled={reportLoading}>{reportLoading ? "جاري التحميل..." : "تحديث"}</Button></div>
+              </div>
+              {reportLoading && (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+                </div>
+              )}
+              {!reportLoading && (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-right py-2">الموظف</th>
+                        <th className="text-right py-2">وقت العمل</th>
+                        <th className="text-right py-2">أيام الحضور</th>
+                        <th className="text-right py-2">أيام الغياب</th>
+                        <th className="text-right py-2 text-amber-600">إجمالي التأخير (د)</th>
+                        <th className="text-right py-2 text-green-600">الوقت الإضافي (د)</th>
+                        <th className="text-right py-2">متوسط التأخير</th>
+                        <th className="text-right py-2">متوسط الإضافي</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reports.map((r) => (
+                        <tr key={r.userId} className="border-b hover:bg-accent/30">
+                          <td className="py-2 font-medium">{r.userName}</td>
+                          <td className="py-2 text-muted-foreground">{r.workStartTime} - {r.workEndTime}</td>
+                          <td className="py-2">{r.totalPresentDays}</td>
+                          <td className="py-2">{r.totalAbsentDays}</td>
+                          <td className="py-2">
+                            <span className={r.totalLateMinutes > 0 ? "text-amber-600 font-medium" : ""}>
+                              {r.totalLateMinutes}د
+                            </span>
+                          </td>
+                          <td className="py-2">
+                            <span className={r.totalOvertimeMinutes > 0 ? "text-green-600 font-medium" : ""}>
+                              {r.totalOvertimeMinutes}د
+                            </span>
+                          </td>
+                          <td className="py-2 text-muted-foreground">{r.avgLateMinutes}د</td>
+                          <td className="py-2 text-muted-foreground">{r.avgOvertimeMinutes}د</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {reports.length === 0 && (
+                    <p className="py-8 text-center text-muted-foreground flex items-center justify-center gap-2">
+                      <AlertCircle className="w-4 h-4" /> لا توجد بيانات للحصول على تقارير
+                    </p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          <Card className="border-indigo-200 bg-indigo-50/30">
+            <CardContent className="pt-6">
+              <p className="text-sm flex items-center gap-2">
+                <Clock className="w-4 h-4 text-indigo-600" />
+                <strong>ربط وقت العمل:</strong> حدّث وقت بداية ونهاية العمل لكل موظف من إدارة المستخدمين. التقارير تقارن البصمة بوقت العمل المحدد لحساب التأخير والوقت الإضافي.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
