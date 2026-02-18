@@ -15,6 +15,7 @@ import {
   Search, Filter, Eye, Printer, ChevronLeft, ChevronRight,
   FileText, Download, RefreshCcw, Send,
 } from "lucide-react";
+import { ScanCaseButton } from "@/components/barcode";
 import type { DentalCase, CaseStatus } from "@shared/api";
 
 const PAGE_SIZE = 15;
@@ -86,9 +87,12 @@ export default function Cases() {
           </h1>
           <p className="text-muted-foreground">عرض وتتبع جميع حالات المعمل ({filtered.length} حالة)</p>
         </div>
-        <Button variant="outline" onClick={loadCases} className="gap-1">
-          <RefreshCcw className="w-4 h-4" /> تحديث
-        </Button>
+        <div className="flex gap-2">
+          <ScanCaseButton variant="outline" className="gap-1" />
+          <Button variant="outline" onClick={loadCases} className="gap-1">
+            <RefreshCcw className="w-4 h-4" /> تحديث
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

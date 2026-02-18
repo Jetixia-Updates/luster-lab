@@ -31,6 +31,7 @@ import {
   Paintbrush, Send, Play, CheckCircle, Eye, Flame, Clock, Star,
   ArrowRight, Workflow, XCircle,
 } from "lucide-react";
+import { ScanCaseButton } from "@/components/barcode";
 import type { DentalCase } from "@shared/api";
 
 const FURNACES = [
@@ -341,12 +342,15 @@ export default function Finishing() {
   // ── LIST VIEW ──────────────────────────────
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Paintbrush className="w-7 h-7 text-yellow-600" />
-          قسم التشطيب والتلوين
-        </h1>
-        <p className="text-muted-foreground">التلوين والحرق والتشطيب النهائي - جميع مراحل العمل</p>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Paintbrush className="w-7 h-7 text-yellow-600" />
+            قسم التشطيب والتلوين
+          </h1>
+          <p className="text-muted-foreground">التلوين والحرق والتشطيب النهائي - جميع مراحل العمل</p>
+        </div>
+        <ScanCaseButton variant="outline" />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

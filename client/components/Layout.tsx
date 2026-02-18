@@ -12,7 +12,7 @@ import {
   LayoutDashboard, ClipboardList, PenTool, Cpu, Paintbrush, Workflow,
   ShieldCheck, Calculator, Truck, Package, BarChart3,
   Menu, ChevronLeft, LogOut, User, Settings,
-  Stethoscope, Users, ScrollText, FileText, Bell, AlertTriangle,
+  Stethoscope, Users, ScrollText, FileText, Bell, AlertTriangle, QrCode,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ScanCaseButton } from "@/components/barcode";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -36,6 +37,7 @@ const NAV_SECTIONS: NavSection[] = [
     title: "الرئيسية",
     items: [
       { path: "/", label: "لوحة التحكم", icon: LayoutDashboard },
+      { path: "/barcode", label: "الباركود و QR", icon: QrCode },
     ],
   },
   {
@@ -294,6 +296,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-3">
+            <ScanCaseButton variant="outline" size="sm" className="gap-1" />
             {/* Notification Bell */}
             <Popover>
               <PopoverTrigger asChild>

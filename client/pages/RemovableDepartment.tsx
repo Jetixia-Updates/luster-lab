@@ -29,6 +29,7 @@ import {
   Send, Play, CheckCircle, Eye, ArrowRight, Workflow, Clock,
   PauseCircle, AlertTriangle, UserCog,
 } from "lucide-react";
+import { ScanCaseButton } from "@/components/barcode";
 import type { DentalCase, RemovableData, RemovableProstheticType, OrthoRemovableType, RemovableFinalStatus, PauseRecord } from "@shared/api";
 
 const PROSTHETIC_TYPES = (Object.keys(REMOVABLE_PROSTHETIC_LABELS) as RemovableProstheticType[]);
@@ -414,12 +415,15 @@ export default function RemovableDepartment() {
   // ── LIST VIEW ──────────────────────────────
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Workflow className="w-7 h-7 text-teal-600" />
-          قسم التركيبات المتحركة
-        </h1>
-        <p className="text-muted-foreground">رص الأسنان • طبخ الأكريل/الفليكس • جاهز</p>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Workflow className="w-7 h-7 text-teal-600" />
+            قسم التركيبات المتحركة
+          </h1>
+          <p className="text-muted-foreground">رص الأسنان • طبخ الأكريل/الفليكس • جاهز</p>
+        </div>
+        <ScanCaseButton variant="outline" />
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

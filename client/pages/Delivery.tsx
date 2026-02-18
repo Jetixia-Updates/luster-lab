@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Truck, CheckCircle, Eye, Package, Clock, Search, Printer, Calendar } from "lucide-react";
+import { ScanCaseButton } from "@/components/barcode";
 import type { DentalCase, Delivery } from "@shared/api";
 
 export default function DeliveryPage() {
@@ -79,12 +80,15 @@ export default function DeliveryPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Truck className="w-7 h-7 text-emerald-600" />
-          قسم التسليم
-        </h1>
-        <p className="text-muted-foreground">تسليم الحالات وتوثيق الاستلام</p>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Truck className="w-7 h-7 text-emerald-600" />
+            قسم التسليم
+          </h1>
+          <p className="text-muted-foreground">تسليم الحالات وتوثيق الاستلام</p>
+        </div>
+        <ScanCaseButton variant="outline" />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

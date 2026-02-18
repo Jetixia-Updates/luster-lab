@@ -52,6 +52,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ScanCaseButton } from "@/components/barcode";
 
 // ── Constants ──────────────────────────────
 const CAD_SOFTWARE = CAD_SOFTWARES.map((s) => ({
@@ -241,7 +242,19 @@ function MeasurementLine({ p1, p2, scaleToMm = 10 }: { p1: THREE.Vector3; p2: TH
   );
 }
 
-// ── 3D Tooth Model Component ───────────────
+// ── Natural Tooth Shape (FDI) ───────────────
+type ToothType = "incisor" | "canine" | "premolar" | "molar";
+function getToothType(num: string): ToothType {
+  const n = parseInt(num, 10);
+  if (isNaN(n)) return "molar";
+  const last = n % 10;
+  if (last === 1 || last === 2) return "incisor";
+  if (last === 3) return "canine";
+  if (last === 4 || last === 5) return "premolar";
+  return "molar";
+}
+
+// ── 3D Tooth Model Component - Natural tooth shapes ───────────────
 function ToothModel({
   toothNumbers,
   workType,
@@ -274,11 +287,9 @@ function ToothModel({
     }
   };
 
-  // Parse tooth numbers
   const teeth = toothNumbers.split(",").map(t => t.trim());
   const isFull = toothNumbers.toLowerCase().includes("full");
 
-  // Generate tooth geometry based on type
   const getToothColor = () => {
     switch (workType) {
       case "zirconia": return "#f5f0e8";
@@ -286,6 +297,80 @@ function ToothModel({
       case "pfm": return "#d4cfc5";
       case "implant": return "#c8c3b8";
       default: return "#e8e3d8";
+    }
+  };
+
+  const toothMat = (hover: boolean) => (
+    <meshPhysicalMaterial
+      color={hover ? "#a8d8f0" : getToothColor()}
+      roughness={0.2}
+      metalness={workType === "pfm" ? 0.3 : 0.05}
+      clearcoat={0.8}
+      clearcoatRoughness={0.2}
+      transmission={workType === "emax" ? 0.15 : 0}
+    />
+  );
+
+  const renderNaturalCrown = (toothType: ToothType, hover: boolean) => {
+    switch (toothType) {
+      case "incisor": // قواطع - شكل مستطيل مسطح حافة قاطعة
+        return (
+          <mesh castShadow>
+            <cylinderGeometry args={[0.22, 0.28, 0.55, 16]} />
+            <meshPhysicalMaterial
+              color={hover ? "#a8d8f0" : getToothColor()}
+              roughness={0.2}
+              clearcoat={0.8}
+              clearcoatRoughness={0.2}
+            />
+          </mesh>
+        );
+      case "canine": // أنياب - شكل مخروطي مدبب
+        return (
+          <group>
+            <mesh castShadow>
+              <cylinderGeometry args={[0.2, 0.28, 0.6, 12]} />
+              {toothMat(hover)}
+            </mesh>
+            <mesh position={[0, 0.35, 0]} castShadow>
+              <coneGeometry args={[0.15, 0.25, 8]} />
+              {toothMat(hover)}
+            </mesh>
+          </group>
+        );
+      case "premolar": // ضواحك - شكل بيضاوي مع نتوءين (ثنائي الحدبة)
+        return (
+          <group>
+            <mesh castShadow>
+              <cylinderGeometry args={[0.28, 0.32, 0.5, 16]} />
+              {toothMat(hover)}
+            </mesh>
+            <mesh position={[0.08, 0.2, 0.05]} castShadow>
+              <sphereGeometry args={[0.12, 8, 6]} />
+              {toothMat(hover)}
+            </mesh>
+            <mesh position={[-0.08, 0.2, -0.05]} castShadow>
+              <sphereGeometry args={[0.12, 8, 6]} />
+              {toothMat(hover)}
+            </mesh>
+          </group>
+        );
+      case "molar": // طواحين - شكل عريض مع أربع حدبات
+      default:
+        return (
+          <group>
+            <mesh castShadow>
+              <cylinderGeometry args={[0.32, 0.36, 0.45, 16]} />
+              {toothMat(hover)}
+            </mesh>
+            {[[0.1, 0.12], [-0.1, 0.12], [0.1, -0.12], [-0.1, -0.12]].map(([ax, az], i) => (
+              <mesh key={i} position={[ax, 0.18, az]} castShadow>
+                <sphereGeometry args={[0.09, 6, 5]} />
+                {toothMat(hover)}
+              </mesh>
+            ))}
+          </group>
+        );
     }
   };
 
@@ -297,46 +382,39 @@ function ToothModel({
         <meshStandardMaterial color="#8a8578" roughness={0.7} />
       </mesh>
 
-      {/* Gingiva / Gum */}
+      {/* Gingiva / Gum - لثة بتشريح طبيعي */}
       <mesh position={[0, -1.0, 0]}>
         <cylinderGeometry args={[2.2, 2.5, 0.6, 32]} />
-        <meshStandardMaterial color="#e8a0a0" roughness={0.5} transparent opacity={0.7} />
+        <meshStandardMaterial color="#e8a0a0" roughness={0.5} transparent opacity={0.85} />
       </mesh>
 
-      {/* Tooth Crowns */}
+      {/* Tooth Crowns - أشكال أسنان طبيعية */}
       {(isFull ? Array.from({ length: 6 }, (_, i) => i) : teeth).map((_, idx) => {
+        const toothNum = isFull ? (idx <= 1 ? "11" : idx <= 3 ? "13" : "16") : (teeth[idx] || "16");
+        const toothType = getToothType(toothNum);
         const angle = isFull
           ? (idx / 6) * Math.PI - Math.PI / 2
           : teeth.length === 1 ? 0
-          : (idx / (teeth.length - 1) - 0.5) * Math.PI * 0.6;
-        const radius = isFull ? 1.5 : 0.8 * teeth.length;
+          : (idx / Math.max(teeth.length - 1, 1) - 0.5) * Math.PI * 0.6;
+        const radius = isFull ? 1.5 : Math.max(0.8 * teeth.length, 0.8);
         const x = Math.sin(angle) * radius;
         const z = Math.cos(angle) * radius * 0.3;
 
         return (
           <group key={idx} position={[x, 0, z]}>
-            {/* Root */}
+            {/* Root - جذر طبيعي مخروطي */}
             <mesh position={[0, -0.6, 0]}>
-              <coneGeometry args={[0.25, 0.8, 8]} />
+              <coneGeometry args={[0.22, 0.85, 10]} />
               <meshStandardMaterial color="#d4c8a8" roughness={0.6} />
             </mesh>
-            {/* Crown */}
-            <mesh
-              position={[0, 0.3, 0]}
-              castShadow
+            {/* Crown - تاج طبيعي حسب نوع السنة */}
+            <group
+              position={[0, 0.25, 0]}
               onPointerOver={() => setHovered(true)}
               onPointerOut={() => setHovered(false)}
             >
-              <capsuleGeometry args={[0.3, 0.5, 8, 16]} />
-              <meshPhysicalMaterial
-                color={hovered ? "#a8d8f0" : getToothColor()}
-                roughness={0.2}
-                metalness={workType === "pfm" ? 0.3 : 0.05}
-                clearcoat={0.8}
-                clearcoatRoughness={0.2}
-                transmission={workType === "emax" ? 0.15 : 0}
-              />
-            </mesh>
+              {renderNaturalCrown(toothType, hovered)}
+            </group>
             {/* Margin Line Ring */}
             <mesh position={[0, -0.15, 0]} rotation={[Math.PI / 2, 0, 0]}>
               <torusGeometry args={[0.32, 0.02, 8, 32]} />
@@ -1274,7 +1352,7 @@ export default function CADDepartment() {
   // ── LIST VIEW ──────────────────────────────
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <PenTool className="w-7 h-7 text-purple-600" />
@@ -1282,6 +1360,7 @@ export default function CADDepartment() {
           </h1>
           <p className="text-muted-foreground">محطة عمل التصميم الاحترافية لمعمل الأسنان</p>
         </div>
+        <ScanCaseButton variant="outline" />
       </div>
 
       {/* Stats */}

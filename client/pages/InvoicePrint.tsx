@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { WORK_TYPE_LABELS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Printer, ArrowRight } from "lucide-react";
+import { BarcodeDisplay, QRCodeDisplay } from "@/components/barcode";
 import type { Invoice, DentalCase } from "@shared/api";
 
 export default function InvoicePrint() {
@@ -100,23 +101,15 @@ export default function InvoicePrint() {
           </div>
         </div>
 
-        {/* Barcode representation */}
-        <div className="flex justify-center mb-6 p-4 bg-gray-50 rounded-lg border">
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-[2px] mb-2">
-              {invoice.caseNumber.split("").map((char, i) => (
-                <div
-                  key={i}
-                  className="bg-black"
-                  style={{
-                    width: char.match(/[0-9]/) ? `${(parseInt(char) || 1) + 1}px` : "3px",
-                    height: "40px",
-                    marginRight: i % 2 === 0 ? "1px" : "2px",
-                  }}
-                />
-              ))}
-            </div>
-            <p className="font-mono text-sm font-bold">{invoice.caseNumber}</p>
+        {/* Barcode + QR - Case reference */}
+        <div className="flex justify-center items-center gap-6 mb-6 p-4 bg-gray-50 rounded-lg border">
+          <div className="flex flex-col items-center">
+            <BarcodeDisplay value={invoice.caseNumber} width={1.5} height={45} fontSize={12} />
+            <p className="font-mono text-xs mt-1">باركود الحالة</p>
+          </div>
+          <div className="flex flex-col items-center">
+            <QRCodeDisplay value={invoice.caseNumber} size={80} />
+            <p className="font-mono text-xs mt-1">QR</p>
           </div>
         </div>
 

@@ -3,13 +3,24 @@
  */
 
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ScrollText, User, Clock, FileText, Filter, RefreshCw } from "lucide-react";
+import { ScrollText, User, Clock, FileText, Filter, RefreshCw, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { AuditLog } from "@shared/api";
+
+function getLogLink(log: AuditLog): string | null {
+  if (!log.entityId) return null;
+  switch (log.entity) {
+    case "invoice": return `/invoices/${log.entityId}/print`;
+    case "case": return `/cases/${log.entityId}`;
+    case "delivery": return `/delivery/${log.entityId}/receipt`;
+    default: return null;
+  }
+}
 
 const ACTION_LABELS: Record<string, { label: string; color: string }> = {
   CREATE_CASE: { label: "إنشاء حالة", color: "bg-blue-100 text-blue-800" },
@@ -96,11 +107,12 @@ export default function AuditLogs() {
             <div className="space-y-3">
               {logs.map((log, idx) => {
                 const actionInfo = ACTION_LABELS[log.action] || { label: log.action, color: "bg-gray-100 text-gray-800" };
-                return (
-                  <div key={log.id || idx} className="flex items-start gap-4 p-4 rounded-lg border hover:bg-accent/30 transition-colors">
+                const linkTo = getLogLink(log);
+                const content = (
+                  <>
                     {/* Timeline dot */}
                     <div className="relative">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                         <FileText className="w-4 h-4" />
                       </div>
                       {idx < logs.length - 1 && (
@@ -113,6 +125,11 @@ export default function AuditLogs() {
                       <div className="flex items-center gap-2 flex-wrap mb-1">
                         <Badge className={`${actionInfo.color} text-xs`}>{actionInfo.label}</Badge>
                         <Badge variant="outline" className="text-xs">{log.entity}</Badge>
+                        {linkTo && (
+                          <span className="text-xs text-primary flex items-center gap-0.5 mr-auto">
+                            <ExternalLink className="w-3 h-3" /> عرض التفاصيل
+                          </span>
+                        )}
                       </div>
                       {log.details && (
                         <p className="text-sm text-foreground mb-1">{log.details}</p>
@@ -131,6 +148,15 @@ export default function AuditLogs() {
                         </span>
                       </div>
                     </div>
+                  </>
+                );
+                return linkTo ? (
+                  <Link key={log.id || idx} to={linkTo} className="flex items-start gap-4 p-4 rounded-lg border hover:bg-accent/30 transition-colors cursor-pointer group block">
+                    {content}
+                  </Link>
+                ) : (
+                  <div key={log.id || idx} className="flex items-start gap-4 p-4 rounded-lg border hover:bg-accent/30 transition-colors group">
+                    {content}
                   </div>
                 );
               })}

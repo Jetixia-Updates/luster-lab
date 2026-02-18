@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { ShieldCheck, CheckCircle, XCircle, Eye, Send, Undo2 } from "lucide-react";
+import { ScanCaseButton } from "@/components/barcode";
 import type { DentalCase, QCCheckResult, CaseStatus } from "@shared/api";
 
 export default function QualityControl() {
@@ -70,12 +71,15 @@ export default function QualityControl() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <ShieldCheck className="w-7 h-7 text-cyan-600" />
-          قسم مراقبة الجودة
-        </h1>
-        <p className="text-muted-foreground">فحص واعتماد الحالات قبل إصدار الفواتير</p>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <ShieldCheck className="w-7 h-7 text-cyan-600" />
+            قسم مراقبة الجودة
+          </h1>
+          <p className="text-muted-foreground">فحص واعتماد الحالات قبل إصدار الفواتير</p>
+        </div>
+        <ScanCaseButton variant="outline" />
       </div>
 
       <div className="grid grid-cols-2 gap-4">

@@ -25,6 +25,7 @@ import Patients from "@/pages/Patients";
 import DoctorStatement from "@/pages/DoctorStatement";
 import DeliveryReceipt from "@/pages/DeliveryReceipt";
 import SuppliersPage from "@/pages/Suppliers";
+import BarcodeModule from "@/pages/BarcodeModule";
 import NotFound from "@/pages/NotFound";
 
 function ProtectedRoutes() {
@@ -87,6 +88,7 @@ function ProtectedRoutes() {
         <Route path="/delivery/:id/receipt" element={<DeliveryReceipt />} />
         <Route path="/invoices/:id/print" element={<InvoicePrint />} />
         <Route path="/cases/:id/print" element={<CasePrint />} />
+        <Route path="/barcode" element={<BarcodeModule />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>

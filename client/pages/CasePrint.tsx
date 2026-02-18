@@ -1,6 +1,6 @@
 /**
- * Case Barcode & Label Print Page
- * Prints a label with case info and representative barcode
+ * Case Barcode & QR Label Print Page
+ * Code128 barcode + QR code - compatible with all scanners and phone cameras
  */
 
 import { useEffect, useState } from "react";
@@ -8,39 +8,9 @@ import { useParams, Link } from "react-router-dom";
 import { api } from "@/lib/api";
 import { WORK_TYPE_LABELS, STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Printer, ArrowRight } from "lucide-react";
+import { BarcodeDisplay, QRCodeDisplay } from "@/components/barcode";
 import type { DentalCase } from "@shared/api";
-
-function generateBarcodeSVG(text: string): string {
-  // Simple Code128-like barcode representation
-  const chars = text.split("");
-  let bars = "11010011100"; // Start code
-  for (const char of chars) {
-    const code = char.charCodeAt(0);
-    const pattern = ((code * 7 + 3) % 256).toString(2).padStart(8, "0")
-      .replace(/0/g, "10").replace(/1/g, "110");
-    bars += pattern.slice(0, 11);
-  }
-  bars += "1100011101011"; // Stop code
-
-  const barWidth = 1.5;
-  const height = 50;
-  let x = 0;
-  let svgBars = "";
-
-  for (const bit of bars) {
-    if (bit === "1") {
-      svgBars += `<rect x="${x}" y="0" width="${barWidth}" height="${height}" fill="black"/>`;
-    }
-    x += barWidth;
-  }
-
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${x}" height="${height + 20}" viewBox="0 0 ${x} ${height + 20}">
-    ${svgBars}
-    <text x="${x / 2}" y="${height + 16}" text-anchor="middle" font-family="monospace" font-size="12">${text}</text>
-  </svg>`;
-}
 
 export default function CasePrint() {
   const { id } = useParams();
@@ -72,7 +42,8 @@ export default function CasePrint() {
     );
   }
 
-  const barcodeSVG = generateBarcodeSVG(dentalCase.caseNumber);
+  // Encode caseNumber - Code128 supports alphanumeric, phones scan QR
+  const barcodeValue = dentalCase.caseNumber;
 
   return (
     <div className="space-y-4">
@@ -88,17 +59,30 @@ export default function CasePrint() {
         </Button>
       </div>
 
-      {/* Print Label - Large */}
+      {/* Print Label - Large with Barcode + QR */}
       <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-8 max-w-[600px] mx-auto print:border-black print:max-w-none">
-        {/* Header */}
         <div className="text-center border-b-2 border-black pb-4 mb-4">
           <h1 className="text-2xl font-bold">معمل لاستر لتقنيات الأسنان</h1>
           <p className="text-sm text-gray-600">Luster Dental Lab</p>
         </div>
 
-        {/* Barcode */}
-        <div className="text-center my-6">
-          <div dangerouslySetInnerHTML={{ __html: barcodeSVG }} className="inline-block" />
+        {/* Barcode + QR side by side */}
+        <div className="flex items-center justify-center gap-8 my-6 flex-wrap">
+          <div className="flex flex-col items-center">
+            <BarcodeDisplay
+              value={barcodeValue}
+              format="CODE128"
+              width={2}
+              height={60}
+              fontSize={14}
+              className="max-w-full"
+            />
+            <span className="text-xs text-gray-500 mt-1">باركود</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <QRCodeDisplay value={barcodeValue} size={100} level="M" />
+            <span className="text-xs text-gray-500 mt-1">QR</span>
+          </div>
         </div>
 
         {/* Case Info Grid */}
@@ -145,7 +129,6 @@ export default function CasePrint() {
           </div>
         </div>
 
-        {/* Notes */}
         {dentalCase.doctorNotes && (
           <div className="mt-4 pt-3 border-t">
             <span className="text-gray-500 text-sm">ملاحظات:</span>
@@ -153,20 +136,21 @@ export default function CasePrint() {
           </div>
         )}
 
-        {/* Footer */}
         <div className="mt-6 pt-3 border-t-2 border-black text-center text-xs text-gray-400">
           <p>تم الطباعة: {new Date().toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
         </div>
       </div>
 
-      {/* Mini Labels - 3 per row for batch printing */}
+      {/* Mini Labels - 3 per row */}
       <div className="no-print">
         <h3 className="text-lg font-bold mb-3">ملصقات صغيرة (للطباعة المتعددة)</h3>
         <div className="grid grid-cols-3 gap-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="bg-white border-2 border-dashed border-gray-300 rounded p-3 text-center">
-              <div dangerouslySetInnerHTML={{ __html: generateBarcodeSVG(dentalCase.caseNumber) }}
-                className="inline-block transform scale-75" />
+              <div className="flex justify-center gap-2">
+                <BarcodeDisplay value={barcodeValue} width={1.2} height={40} fontSize={10} />
+                <QRCodeDisplay value={barcodeValue} size={60} />
+              </div>
               <div className="text-xs mt-1 space-y-0.5">
                 <p className="font-bold">{dentalCase.caseNumber}</p>
                 <p>{dentalCase.patientName}</p>

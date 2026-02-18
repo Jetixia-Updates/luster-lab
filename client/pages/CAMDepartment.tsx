@@ -35,6 +35,7 @@ import {
   FileUp, Droplets, Thermometer, PackageOpen, Sparkles,
 } from "lucide-react";
 import type { DentalCase, InventoryItem, CAMStage } from "@shared/api";
+import { ScanCaseButton } from "@/components/barcode";
 
 // ── Constants ──────────────────────────────
 const MACHINES = [
@@ -416,12 +417,15 @@ export default function CAMDepartment() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Cpu className="w-7 h-7 text-orange-600" />
-          قسم التفريز CAM
-        </h1>
-        <p className="text-muted-foreground">مراحل التفريز الكاملة - تشغيل الماكينات وإدارة البلوكات</p>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Cpu className="w-7 h-7 text-orange-600" />
+            قسم التفريز CAM
+          </h1>
+          <p className="text-muted-foreground">مراحل التفريز الكاملة - تشغيل الماكينات وإدارة البلوكات</p>
+        </div>
+        <ScanCaseButton variant="outline" />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-6 gap-3">

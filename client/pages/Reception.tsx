@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, ClipboardList, Send, Printer, Eye, AlertCircle } from "lucide-react";
+import { ScanCaseButton } from "@/components/barcode";
 import type { Doctor, DentalCase, CaseWorkType, CreateCaseRequest } from "@shared/api";
 
 const TEETH_PATTERN = /^(\d{1,2})(,\s*\d{1,2})*$|^full$/i;
@@ -108,10 +109,13 @@ export default function Reception() {
           </h1>
           <p className="text-muted-foreground">تسجيل الحالات الجديدة وتحويلها للأقسام</p>
         </div>
-        <Button onClick={() => setShowForm(!showForm)} className="gap-2">
-          <Plus className="w-4 h-4" />
-          حالة جديدة
-        </Button>
+        <div className="flex gap-2">
+          <ScanCaseButton variant="outline" className="gap-2" />
+          <Button onClick={() => setShowForm(!showForm)} className="gap-2">
+            <Plus className="w-4 h-4" />
+            حالة جديدة
+          </Button>
+        </div>
       </div>
 
       {/* New Case Form */}
