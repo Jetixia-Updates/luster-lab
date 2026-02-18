@@ -16,6 +16,7 @@ import Accounting from "@/pages/Accounting";
 import DeliveryPage from "@/pages/Delivery";
 import Reports from "@/pages/Reports";
 import Doctors from "@/pages/Doctors";
+import DoctorDetail from "@/pages/DoctorDetail";
 import UserManagement from "@/pages/UserManagement";
 import EmployeeDetail from "@/pages/EmployeeDetail";
 import AuditLogs from "@/pages/AuditLogs";
@@ -83,6 +84,7 @@ function ProtectedRoutes() {
         <Route path="/delivery" element={<DeliveryPage />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/doctors" element={<Doctors />} />
+        <Route path="/doctors/:id" element={<DoctorDetail />} />
         <Route path="/users" element={<UserManagement />} />
         <Route path="/users/:id" element={<EmployeeDetail />} />
         <Route path="/audit-logs" element={<AuditLogs />} />

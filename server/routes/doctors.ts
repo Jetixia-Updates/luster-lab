@@ -3,18 +3,80 @@
  */
 
 import { RequestHandler } from "express";
-import { doctors, patients, cases, generateId, persistDoctor, persistPatient, removeDoctorFromDB } from "../data/store";
+import { doctors, patients, cases, invoices, generateId, persistDoctor, persistPatient, removeDoctorFromDB } from "../data/store";
 import { logAudit } from "../middleware/audit";
 import type { Doctor, Patient, ApiResponse } from "@shared/api";
 
-export const getDoctors: RequestHandler = (_req, res) => {
-  res.json({ success: true, data: doctors });
+export const getDoctors: RequestHandler = (req, res) => {
+  const withAlerts = req.query.alerts === "1";
+  if (!withAlerts) {
+    return res.json({ success: true, data: doctors });
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  const enriched = doctors.map((d) => {
+    const docCases = cases.filter((c) => c.doctorId === d.id && !["delivered", "cancelled"].includes(c.currentStatus) && c.expectedDeliveryDate < today);
+    const docInvoices = invoices.filter((i) => i.doctorId === d.id && i.status !== "cancelled" && i.remainingAmount > 0 && i.dueDate < today);
+    return {
+      ...d,
+      overdueInvoicesCount: docInvoices.length,
+      overdueCasesCount: docCases.length,
+      hasAlerts: d.totalDebt > 0 || docInvoices.length > 0 || docCases.length > 0,
+    };
+  });
+  res.json({ success: true, data: enriched });
 };
 
 export const getDoctor: RequestHandler = (req, res) => {
   const doc = doctors.find((d) => d.id === req.params.id);
   if (!doc) return res.status(404).json({ success: false, error: "Doctor not found" });
   res.json({ success: true, data: doc });
+};
+
+// GET /api/doctors/:id/overview - كل بيانات الطبيب مع التنبيهات
+export const getDoctorOverview: RequestHandler = (req, res) => {
+  const id = String(req.params.id || "");
+  const doc = doctors.find((d) => d.id === id);
+  if (!doc) return res.status(404).json({ success: false, error: "Doctor not found" });
+
+  const docCases = cases.filter((c) => c.doctorId === id).sort((a, b) => new Date(b.receivedDate).getTime() - new Date(a.receivedDate).getTime());
+  const docPatients = patients.filter((p) => p.doctorId === id);
+  const docInvoices = invoices.filter((i) => i.doctorId === id && i.status !== "cancelled");
+
+  const today = new Date().toISOString().slice(0, 10);
+  const overdueInvoices = docInvoices.filter((i) => i.remainingAmount > 0 && i.dueDate < today);
+  const overdueCases = docCases.filter((c) => !["delivered", "cancelled"].includes(c.currentStatus) && c.expectedDeliveryDate < today);
+
+  const alerts: { type: string; title: string; count?: number; amount?: number; items?: any[] }[] = [];
+  if (overdueInvoices.length > 0) {
+    const total = overdueInvoices.reduce((s, i) => s + i.remainingAmount, 0);
+    alerts.push({ type: "overdue_invoices", title: "فواتير متأخرة السداد", count: overdueInvoices.length, amount: total, items: overdueInvoices });
+  }
+  if (overdueCases.length > 0) {
+    alerts.push({ type: "overdue_cases", title: "حالات متأخرة عن التسليم", count: overdueCases.length, items: overdueCases });
+  }
+  if (doc.totalDebt > 0) {
+    alerts.push({ type: "debt", title: "مبلغ مدين", amount: doc.totalDebt });
+  }
+
+  const totalInvoiced = docInvoices.reduce((s, i) => s + i.totalAmount, 0);
+  const totalPaid = docInvoices.reduce((s, i) => s + i.paidAmount, 0);
+
+  res.json({
+    success: true,
+    data: {
+      doctor: doc,
+      cases: docCases,
+      patients: docPatients,
+      invoices: docInvoices.sort((a, b) => new Date(b.issuedDate).getTime() - new Date(a.issuedDate).getTime()),
+      totalInvoiced,
+      totalPaid,
+      totalRemaining: totalInvoiced - totalPaid,
+      collectionRate: totalInvoiced > 0 ? Math.round((totalPaid / totalInvoiced) * 100) : 0,
+      alerts,
+      overdueInvoicesCount: overdueInvoices.length,
+      overdueCasesCount: overdueCases.length,
+    },
+  });
 };
 
 export const createDoctor: RequestHandler = (req, res) => {

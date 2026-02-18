@@ -19,7 +19,7 @@ import { errorHandler } from "./middleware/errorHandler";
 // Route handlers
 import { handleDemo } from "./routes/demo";
 import { login, getMe, getUsers, getUser, createUser, updateUser, toggleUserActive } from "./routes/auth";
-import { getDoctors, getDoctor, createDoctor, updateDoctor, deleteDoctor, getPatients, createPatient, updatePatient } from "./routes/doctors";
+import { getDoctors, getDoctor, getDoctorOverview, createDoctor, updateDoctor, deleteDoctor, getPatients, createPatient, updatePatient } from "./routes/doctors";
 import {
   getCases, getCase, createCase, updateCase, deleteCase,
   transferCase, updateCADData, updateCAMData, updateFinishingData, updateRemovableData, updateQCData,
@@ -62,6 +62,12 @@ import {
   getHRNeeds, createHRNeed, updateHRNeed, deleteHRNeed,
   getHRPositions, createHRPosition, updateHRPosition, deleteHRPosition,
   getHRApplications, createHRApplication, updateHRApplication, deleteHRApplication,
+  getHRLeaves, createHRLeave, updateHRLeave, deleteHRLeave,
+  getHRContracts, createHRContract, updateHRContract, deleteHRContract,
+  getHRPerformance, createHRPerformance, deleteHRPerformance,
+  getHRTrainings, createHRTraining, updateHRTraining, deleteHRTraining,
+  getHRPolicies, createHRPolicy, updateHRPolicy, deleteHRPolicy,
+  getHRDashboard,
 } from "./routes/hr";
 
 export { initializeStore };
@@ -100,6 +106,7 @@ export function createServer() {
 
   // ── Doctor Routes ────────────────────────────────
   app.get("/api/doctors", getDoctors);
+  app.get("/api/doctors/:id/overview", getDoctorOverview);
   app.get("/api/doctors/:id", getDoctor);
   app.post("/api/doctors", createDoctor);
   app.put("/api/doctors/:id", updateDoctor);
@@ -227,6 +234,26 @@ export function createServer() {
   app.post("/api/hr/applications", createHRApplication);
   app.put("/api/hr/applications/:id", updateHRApplication);
   app.delete("/api/hr/applications/:id", deleteHRApplication);
+  app.get("/api/hr/dashboard", getHRDashboard);
+  app.get("/api/hr/leaves", getHRLeaves);
+  app.post("/api/hr/leaves", createHRLeave);
+  app.put("/api/hr/leaves/:id", updateHRLeave);
+  app.delete("/api/hr/leaves/:id", deleteHRLeave);
+  app.get("/api/hr/contracts", getHRContracts);
+  app.post("/api/hr/contracts", createHRContract);
+  app.put("/api/hr/contracts/:id", updateHRContract);
+  app.delete("/api/hr/contracts/:id", deleteHRContract);
+  app.get("/api/hr/performance", getHRPerformance);
+  app.post("/api/hr/performance", createHRPerformance);
+  app.delete("/api/hr/performance/:id", deleteHRPerformance);
+  app.get("/api/hr/trainings", getHRTrainings);
+  app.post("/api/hr/trainings", createHRTraining);
+  app.put("/api/hr/trainings/:id", updateHRTraining);
+  app.delete("/api/hr/trainings/:id", deleteHRTraining);
+  app.get("/api/hr/policies", getHRPolicies);
+  app.post("/api/hr/policies", createHRPolicy);
+  app.put("/api/hr/policies/:id", updateHRPolicy);
+  app.delete("/api/hr/policies/:id", deleteHRPolicy);
 
   // ── Dashboard & Reports ──────────────────────────
   app.get("/api/dashboard/stats", getDashboardStats);
